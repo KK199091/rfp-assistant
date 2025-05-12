@@ -84,23 +84,29 @@ def get_api_key():
 # Initialize API key
 api_key = get_api_key()
 
-# Custom Anthropic API function - simplified to avoid dependencies
-def call_anthropic_api(prompt, max_tokens=2000, temperature=0):
+# Updated Anthropic API function for Claude 3 models using Messages API
+def call_anthropic_api(prompt, max_tokens=2000, temperature=0, system_prompt=None):
     headers = {
         "x-api-key": api_key,
         "content-type": "application/json",
         "anthropic-version": "2023-06-01"
     }
     
+    messages = [{"role": "user", "content": prompt}]
+    
     data = {
-        "prompt": f"\n\nHuman: {prompt}\n\nAssistant:",
-        "model": "claude-instant-1",  # Using claude-instant-1 which has wider availability
-        "max_tokens_to_sample": max_tokens,
-        "temperature": temperature
+        "model": "claude-3-haiku-20240307",  # Using Claude 3 Haiku which is fast and reliable
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "messages": messages
     }
     
+    # Add system prompt if provided
+    if system_prompt:
+        data["system"] = system_prompt
+    
     response = requests.post(
-        "https://api.anthropic.com/v1/complete", 
+        "https://api.anthropic.com/v1/messages", 
         headers=headers,
         json=data
     )
@@ -108,7 +114,9 @@ def call_anthropic_api(prompt, max_tokens=2000, temperature=0):
     if response.status_code != 200:
         raise Exception(f"Error from Anthropic API: {response.text}")
     
-    return response.json()["completion"]
+    # Extract the response text from the messages API format
+    response_json = response.json()
+    return response_json["content"][0]["text"]
 
 # Custom CSS for a better looking UI
 st.markdown("""
@@ -289,8 +297,14 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
             {st.session_state.rfp_text[:15000]}  # Limit content to avoid token limits
             """
             
-            # Call Anthropic API
-            parser_response = call_anthropic_api(parser_prompt, max_tokens=2000, temperature=0)
+            # Call Anthropic API with system prompt
+            parser_system_prompt = "You are a Document Parser Agent that extracts structured information from RFP documents."
+            parser_response = call_anthropic_api(
+                parser_prompt, 
+                max_tokens=2000, 
+                temperature=0,
+                system_prompt=parser_system_prompt
+            )
             
             # Try to extract JSON from the response
             try:
@@ -315,8 +329,7 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
         
         with st.spinner("Retrieving relevant knowledge..."):
             # Create prompt for Knowledge Retrieval Agent
-            knowledge_prompt = f"""You are a Knowledge Retrieval Agent for a professional services firm in Australia.
-            Given these RFP requirements, provide relevant information that should be included in our response:
+            knowledge_prompt = f"""Given these RFP requirements, provide relevant information that should be included in our response:
             
             {str(st.session_state.requirements)}
             
@@ -329,8 +342,14 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
             Format as a structured list of recommendations.
             """
             
-            # Call Anthropic API
-            st.session_state.knowledge = call_anthropic_api(knowledge_prompt, max_tokens=2000, temperature=0.2)
+            # Call Anthropic API with system prompt
+            knowledge_system_prompt = "You are a Knowledge Retrieval Agent for a professional services firm in Australia. You find relevant information from the company's knowledge base."
+            st.session_state.knowledge = call_anthropic_api(
+                knowledge_prompt, 
+                max_tokens=2000, 
+                temperature=0.2,
+                system_prompt=knowledge_system_prompt
+            )
         
         # Display progress for Response Generator Agent
         st.markdown('<div class="agent-header">✍️ Response Generator Agent</div>', unsafe_allow_html=True)
@@ -343,8 +362,7 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
         
         with st.spinner("Generating response draft..."):
             # Create prompt for Response Generator Agent
-            response_prompt = f"""You are a Response Generator Agent for an Australian professional services firm.
-            Create draft responses for an RFP based on these requirements and available knowledge:
+            response_prompt = f"""Create draft responses for an RFP based on these requirements and available knowledge:
             
             RFP Requirements:
             {str(st.session_state.requirements)}
@@ -357,8 +375,14 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
             Use markdown formatting for better readability.
             """
             
-            # Call Anthropic API
-            st.session_state.response_draft = call_anthropic_api(response_prompt, max_tokens=3500, temperature=0.4)
+            # Call Anthropic API with system prompt
+            response_system_prompt = "You are a Response Generator Agent for an Australian professional services firm. You create professional RFP response content."
+            st.session_state.response_draft = call_anthropic_api(
+                response_prompt, 
+                max_tokens=3500, 
+                temperature=0.4,
+                system_prompt=response_system_prompt
+            )
         
         # Display progress for Quality Control Agent
         st.markdown('<div class="agent-header">🔍 Quality Control Agent</div>', unsafe_allow_html=True)
@@ -371,8 +395,7 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
         
         with st.spinner("Performing quality review..."):
             # Create prompt for Quality Control Agent
-            review_prompt = f"""You are a Quality Control Agent for RFP responses.
-            Review this draft RFP response against the requirements and provide feedback:
+            review_prompt = f"""Review this draft RFP response against the requirements and provide feedback:
             
             Draft Response:
             {st.session_state.response_draft}
@@ -390,14 +413,20 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
             Format your response in markdown with clear sections.
             """
             
-            # Call Anthropic API
-            st.session_state.review = call_anthropic_api(review_prompt, max_tokens=2000, temperature=0)
+            # Call Anthropic API with system prompt
+            review_system_prompt = "You are a Quality Control Agent that reviews RFP responses for completeness, compliance, and quality."
+            st.session_state.review = call_anthropic_api(
+                review_prompt, 
+                max_tokens=2000, 
+                temperature=0,
+                system_prompt=review_system_prompt
+            )
         
         # Mark processing as complete
         st.session_state.processing_complete = True
         
         # Force page refresh to show results
-        st.experimental_rerun()
+        st.rerun()
 
 # Display results if processing is complete
 if st.session_state.processing_complete:
@@ -581,7 +610,7 @@ if st.session_state.processing_complete:
         st.session_state.processing_complete = False
         
         # Force page refresh
-        st.experimental_rerun()
+        st.rerun()
 
 # Display instructions if no file is uploaded
 if st.session_state.rfp_text is None and not st.session_state.processing_complete:
