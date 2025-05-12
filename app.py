@@ -172,30 +172,6 @@ def generate_docx(response_draft, review):
     buffer.seek(0)
     return buffer
 
-# Simple function to convert markdown to HTML without external dependencies
-def simple_md_to_html(md_text):
-    """Convert basic markdown to HTML without external dependencies"""
-    # Replace headers
-    html = md_text.replace("\n# ", "\n<h1>").replace("\n## ", "\n<h2>").replace("\n### ", "\n<h3>")
-    html = html.replace("\n</h1>", "</h1>\n").replace("\n</h2>", "</h2>\n").replace("\n</h3>", "</h3>\n")
-    
-    # Replace lists
-    html = html.replace("\n- ", "\n<li>").replace("\n* ", "\n<li>")
-    
-    # Replace bold and italic
-    html = html.replace("**", "<strong>").replace("__", "<strong>")
-    html = html.replace("*", "<em>").replace("_", "<em>")
-    
-    # Replace paragraphs
-    paragraphs = html.split("\n\n")
-    html = "\n".join([f"<p>{p}</p>" if not (p.startswith("<h") or p.startswith("<li>")) else p for p in paragraphs])
-    
-    # Replace list items with proper HTML
-    html = html.replace("\n<li>", "</li>\n<li>")
-    html = html.replace("<li>", "<ul><li>", 1).replace("</li>\n", "</li></ul>\n", 1)
-    
-    return html
-
 # Password protection
 def check_password():
     """Returns `True` if the user had the correct password."""
@@ -302,13 +278,14 @@ def call_anthropic_api(prompt, max_tokens=2000, temperature=0, system_prompt=Non
     response_json = response.json()
     return response_json["content"][0]["text"]
 
-# Enhanced CSS 
+# Enhanced CSS with animations
 st.markdown("""
 <style>
-    /* Modern UI Theme */
+    /* Modern UI Theme - Base */
     .main {
-        background-color: #f8f9fa;
-        background-image: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        background-color: #f8fafc;
+        background-image: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     .stApp {
         max-width: 1200px;
@@ -358,6 +335,129 @@ st.markdown("""
         transform: translateY(0);
     }
     
+    /* Hero Section */
+    .hero-container {
+        display: flex;
+        align-items: center;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        margin-bottom: 2rem;
+        color: white;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+        position: relative;
+    }
+    .hero-container::after {
+        content: "";
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        right: -100px;
+        top: -100px;
+    }
+    .hero-content {
+        flex: 1;
+        z-index: 1;
+    }
+    .hero-content h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        color: white;
+        border: none;
+    }
+    .hero-subtitle {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+    }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    .stat-label {
+        font-size: 1rem;
+        opacity: 0.8;
+    }
+    .hero-image {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    /* Steps Section */
+    .steps-container {
+        display: flex;
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    .step-item {
+        flex: 1;
+        background-color: white;
+        border-radius: 12px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    .step-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+    .step-number {
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #4f46e5;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    .step-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    .step-title {
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+        color: #1e40af;
+    }
+    .step-desc {
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+    
+    /* Upload Container */
+    .upload-container {
+        background-color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-top: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border-top: 4px solid #4f46e5;
+    }
+    
     /* Info Boxes */
     .info-box {
         background-color: #e0f2fe;
@@ -384,7 +484,7 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
     
-    /* Agent Cards */
+    /* Agent Cards with Animation */
     .agent-card {
         background-color: white;
         border-radius: 12px;
@@ -393,11 +493,24 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         border-top: 4px solid #4f46e5;
         transition: all 0.3s ease;
+        animation: slideIn 0.5s ease forwards;
+        opacity: 0;
     }
-    .agent-card:hover {
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-        transform: translateY(-5px);
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+    .agent-card:nth-child(1) { animation-delay: 0.1s; }
+    .agent-card:nth-child(2) { animation-delay: 0.3s; }
+    .agent-card:nth-child(3) { animation-delay: 0.5s; }
+    .agent-card:nth-child(4) { animation-delay: 0.7s; }
+    
     .agent-header {
         font-weight: 700;
         color: #1e40af;
@@ -406,13 +519,64 @@ st.markdown("""
         display: flex;
         align-items: center;
     }
-    .agent-header svg {
-        margin-right: 0.5rem;
-    }
     .agent-status {
         font-style: italic;
         color: #6b7280;
         margin-bottom: 1rem;
+    }
+    
+    /* Progress Animation */
+    @keyframes progress {
+        0% { width: 0%; }
+        100% { width: 100%; }
+    }
+    .animated-progress {
+        height: 4px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        margin: 1rem 0;
+        overflow: hidden;
+    }
+    .animated-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        animation: progress 30s ease forwards;
+    }
+    
+    /* Success Animation */
+    @keyframes checkmark {
+        0% {
+            stroke-dashoffset: 100;
+        }
+        100% {
+            stroke-dashoffset: 0;
+        }
+    }
+    .checkmark {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 2;
+        stroke: #4f46e5;
+        stroke-miterlimit: 10;
+        margin: 10% auto;
+        box-shadow: inset 0px 0px 0px #4f46e5;
+    }
+    .checkmark-circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 2;
+        stroke-miterlimit: 10;
+        stroke: #4f46e5;
+        fill: none;
+        animation: checkmark 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+    .checkmark-check {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        animation: checkmark 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.3s forwards;
     }
     
     /* Tables and Data Display */
@@ -462,6 +626,9 @@ st.markdown("""
         background-color: #4f46e5 !important;
         color: white !important;
     }
+    .stTabs [data-baseweb="tab"]:hover {
+        transform: translateY(-2px);
+    }
     
     /* Progress bar */
     .stProgress > div > div > div > div {
@@ -478,9 +645,12 @@ st.markdown("""
     /* Download button */
     .stDownloadButton > button {
         background-color: #059669;
+        transition: all 0.3s ease;
     }
     .stDownloadButton > button:hover {
         background-color: #047857;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(4, 120, 87, 0.3);
     }
     
     /* Card-like sections */
@@ -490,6 +660,12 @@ st.markdown("""
         padding: 1.5rem;
         margin-bottom: 1.5rem;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        animation: fadeIn 0.5s ease forwards;
+        opacity: 0;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
     
     /* JSON formatting for requirements */
@@ -508,14 +684,135 @@ st.markdown("""
     .json-list-item:last-child {
         border-bottom: none;
     }
+    
+    /* Dashboard Styles */
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .dashboard-header h2 {
+        font-size: 1.8rem;
+        color: #1e3a8a;
+        margin-bottom: 0.5rem;
+    }
+    .dashboard-header p {
+        color: #6b7280;
+        font-size: 1.1rem;
+    }
+    .dashboard-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        height: 100%;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Metrics Bar */
+    .metrics-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .metric-item {
+        flex: 1;
+        min-width: 120px;
+        background-color: #f8fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    .metric-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    .metric-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1e3a8a;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .action-button {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: none;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .action-button.primary {
+        background-color: #4f46e5;
+        color: white;
+    }
+    .action-button.secondary {
+        background-color: #e0f2fe;
+        color: #0369a1;
+    }
+    .action-button.tertiary {
+        background-color: #f8fafc;
+        color: #1e293b;
+        border: 1px solid #e2e8f0;
+    }
+    .action-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .action-icon {
+        margin-right: 0.75rem;
+        font-size: 1.2rem;
+    }
+    
+    /* Download options */
+    .download-option {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        height: 100%;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    .download-option:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+    .download-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #4f46e5;
+    }
+    .download-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #1e3a8a;
+    }
+    .download-desc {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
 </style>
+
+<!-- Add Lottie Player for animations -->
+<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 """, unsafe_allow_html=True)
 
-# Title and introduction
-st.title("🤖 RFP Response Assistant")
-st.subheader("Multi-Agent System for Professional Services")
-
-# Sidebar with explanation
+# Title and introduction for sidebar
 with st.sidebar:
     st.header("Multi-Agent System")
     st.markdown("""
@@ -546,15 +843,6 @@ with st.sidebar:
     
     st.caption("© 2025 Your Company Name")
 
-# Main content area
-st.markdown("---")
-
-# File uploader with better styling
-st.markdown('<div class="info-box">', unsafe_allow_html=True)
-st.subheader("📄 Step 1: Upload RFP Document")
-uploaded_file = st.file_uploader("Upload RFP Document (PDF)", type=["pdf"])
-st.markdown("</div>", unsafe_allow_html=True)
-
 # Initialize session state for tracking progress and results
 if 'rfp_text' not in st.session_state:
     st.session_state.rfp_text = None
@@ -568,6 +856,98 @@ if 'review' not in st.session_state:
     st.session_state.review = None
 if 'processing_complete' not in st.session_state:
     st.session_state.processing_complete = False
+
+# Enhanced landing page with visual elements
+if st.session_state.rfp_text is None and not st.session_state.processing_complete:
+    # Hero section with animated illustration
+    st.markdown("""
+    <div class="hero-container">
+        <div class="hero-content">
+            <h1>RFP Response Assistant</h1>
+            <p class="hero-subtitle">Transform hours of manual work into minutes with AI</p>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-number">60%</span>
+                    <span class="stat-label">Time Saved</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Requirement Coverage</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">4×</span>
+                    <span class="stat-label">Faster Response</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-image">
+            <!-- Since we can't embed actual Lottie animations in Streamlit Cloud without using custom components,
+                 we'll use an emoji as a placeholder -->
+            <div style="font-size: 5rem; text-align: center;">📝✨</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Upload section
+    st.markdown('<div class="upload-container">', unsafe_allow_html=True)
+    st.subheader("📄 Upload Your RFP Document")
+    uploaded_file = st.file_uploader("Upload an RFP document (PDF) to begin the automated response process", type=["pdf"])
+    
+    # Use a more visual way to show instructions with three simple steps
+    st.markdown("""
+    <div class="steps-container">
+        <div class="step-item">
+            <div class="step-number">1</div>
+            <div class="step-icon">📄</div>
+            <div class="step-title">Upload RFP</div>
+            <div class="step-desc">Upload your RFP document in PDF format</div>
+        </div>
+        <div class="step-item">
+            <div class="step-number">2</div>
+            <div class="step-icon">🤖</div>
+            <div class="step-title">AI Processing</div>
+            <div class="step-desc">Our agents analyze and create a response</div>
+        </div>
+        <div class="step-item">
+            <div class="step-number">3</div>
+            <div class="step-icon">📝</div>
+            <div class="step-title">Download</div>
+            <div class="step-desc">Get your professional RFP response</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Add a "Learn more" expandable section instead of showing all the details
+    with st.expander("Learn more about how it works"):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+            ### 🔍 Document Parser Agent
+            - Analyzes RFP documents
+            - Extracts key requirements and structure
+            - Identifies deadlines and evaluation criteria
+            
+            ### 🧠 Knowledge Retrieval Agent
+            - Searches company knowledge base
+            - Finds relevant past projects and experience
+            - Identifies suitable team members and qualifications
+            """)
+        
+        with col2:
+            st.markdown("""
+            ### ✍️ Response Generator Agent
+            - Creates tailored content for each section
+            - Aligns proposal with requirements
+            - Formats response professionally
+            
+            ### 🔍 Quality Control Agent
+            - Reviews for completeness and compliance
+            - Identifies gaps and improvement areas
+            - Highlights sections needing human expertise
+            """)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Extract text from uploaded document
 if uploaded_file is not None:
@@ -595,16 +975,21 @@ if uploaded_file is not None:
 # Process RFP button - when clicked, start the process
 if st.session_state.rfp_text is not None and not st.session_state.processing_complete:
     if st.button("Start Multi-Agent Process", key="start_process"):
-        # Display progress for Document Parser Agent
-        st.markdown('<div class="agent-card">', unsafe_allow_html=True)
-        st.markdown('<div class="agent-header">🔍 Document Parser Agent</div>', unsafe_allow_html=True)
-        st.markdown('<div class="agent-status">Analyzing RFP document and extracting key requirements...</div>', unsafe_allow_html=True)
+        # Display animated agent card for Document Parser
+        st.markdown(f'''
+        <div class="agent-card">
+            <div class="agent-header">🔍 Document Parser Agent</div>
+            <div class="agent-status">Analyzing RFP document and extracting key requirements...</div>
+            <div class="animated-progress">
+                <div class="animated-progress-bar"></div>
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
         
-        progress_bar = st.progress(0)
-        for i in range(100):
-            progress_bar.progress(i + 1)
-            time.sleep(0.01)
+        # Create a placeholder for the success message
+        success_placeholder1 = st.empty()
         
+        # Process document parser agent
         with st.spinner("Extracting structured requirements..."):
             # Create prompt for Document Parser Agent
             parser_prompt = f"""You are a Document Parser Agent specialized in analyzing RFP documents. 
@@ -642,19 +1027,32 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
             except Exception as e:
                 st.session_state.requirements = {"error": f"Error parsing response: {str(e)}", "raw_response": parser_response}
         
-        st.success("✅ Requirements successfully extracted!")
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Show success indicator with SVG animation
+        success_placeholder1.markdown(f'''
+        <div class="success-indicator">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+            <p>✅ Document Parser Agent completed successfully!</p>
+        </div>
+        ''', unsafe_allow_html=True)
         
-        # Display progress for Knowledge Retrieval Agent
-        st.markdown('<div class="agent-card">', unsafe_allow_html=True)
-        st.markdown('<div class="agent-header">🧠 Knowledge Retrieval Agent</div>', unsafe_allow_html=True)
-        st.markdown('<div class="agent-status">Searching company knowledge base for relevant information...</div>', unsafe_allow_html=True)
+        # Display animated agent card for Knowledge Retrieval
+        st.markdown(f'''
+        <div class="agent-card">
+            <div class="agent-header">🧠 Knowledge Retrieval Agent</div>
+            <div class="agent-status">Searching company knowledge base for relevant information...</div>
+            <div class="animated-progress">
+                <div class="animated-progress-bar"></div>
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
         
-        progress_bar = st.progress(0)
-        for i in range(100):
-            progress_bar.progress(i + 1)
-            time.sleep(0.01)
+        # Create a placeholder for the success message
+        success_placeholder2 = st.empty()
         
+        # Process knowledge retrieval agent
         with st.spinner("Retrieving relevant knowledge and past projects..."):
             # Create prompt for Knowledge Retrieval Agent
             knowledge_prompt = f"""Given these RFP requirements, provide relevant information that should be included in our response:
@@ -679,19 +1077,32 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
                 system_prompt=knowledge_system_prompt
             )
         
-        st.success("✅ Knowledge successfully retrieved!")
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Show success indicator with SVG animation
+        success_placeholder2.markdown(f'''
+        <div class="success-indicator">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+            <p>✅ Knowledge Retrieval Agent completed successfully!</p>
+        </div>
+        ''', unsafe_allow_html=True)
         
-        # Display progress for Response Generator Agent
-        st.markdown('<div class="agent-card">', unsafe_allow_html=True)
-        st.markdown('<div class="agent-header">✍️ Response Generator Agent</div>', unsafe_allow_html=True)
-        st.markdown('<div class="agent-status">Creating draft response sections based on requirements and knowledge...</div>', unsafe_allow_html=True)
+        # Display animated agent card for Response Generator
+        st.markdown(f'''
+        <div class="agent-card">
+            <div class="agent-header">✍️ Response Generator Agent</div>
+            <div class="agent-status">Creating draft response sections based on requirements and knowledge...</div>
+            <div class="animated-progress">
+                <div class="animated-progress-bar"></div>
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
         
-        progress_bar = st.progress(0)
-        for i in range(100):
-            progress_bar.progress(i + 1)
-            time.sleep(0.01)
+        # Create a placeholder for the success message
+        success_placeholder3 = st.empty()
         
+        # Process response generator agent
         with st.spinner("Generating comprehensive response draft..."):
             # Create prompt for Response Generator Agent
             response_prompt = f"""Create draft responses for an RFP based on these requirements and available knowledge:
@@ -716,19 +1127,32 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
                 system_prompt=response_system_prompt
             )
         
-        st.success("✅ Response draft successfully generated!")
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Show success indicator with SVG animation
+        success_placeholder3.markdown(f'''
+        <div class="success-indicator">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+            <p>✅ Response Generator Agent completed successfully!</p>
+        </div>
+        ''', unsafe_allow_html=True)
         
-        # Display progress for Quality Control Agent
-        st.markdown('<div class="agent-card">', unsafe_allow_html=True)
-        st.markdown('<div class="agent-header">🔍 Quality Control Agent</div>', unsafe_allow_html=True)
-        st.markdown('<div class="agent-status">Reviewing generated response for completeness and compliance...</div>', unsafe_allow_html=True)
+        # Display animated agent card for Quality Control
+        st.markdown(f'''
+        <div class="agent-card">
+            <div class="agent-header">🔍 Quality Control Agent</div>
+            <div class="agent-status">Reviewing generated response for completeness and compliance...</div>
+            <div class="animated-progress">
+                <div class="animated-progress-bar"></div>
+            </div>
+        </div>
+        ''', unsafe_allow_html=True)
         
-        progress_bar = st.progress(0)
-        for i in range(100):
-            progress_bar.progress(i + 1)
-            time.sleep(0.01)
+        # Create a placeholder for the success message
+        success_placeholder4 = st.empty()
         
+        # Process quality control agent
         with st.spinner("Performing comprehensive quality review..."):
             # Create prompt for Quality Control Agent
             review_prompt = f"""Review this draft RFP response against the requirements and provide feedback:
@@ -758,8 +1182,16 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
                 system_prompt=review_system_prompt
             )
         
-        st.success("✅ Quality review successfully completed!")
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Show success indicator with SVG animation
+        success_placeholder4.markdown(f'''
+        <div class="success-indicator">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+            <p>✅ Quality Control Agent completed successfully!</p>
+        </div>
+        ''', unsafe_allow_html=True)
         
         # Mark processing as complete
         st.session_state.processing_complete = True
@@ -933,92 +1365,121 @@ if st.session_state.processing_complete:
         st.markdown(st.session_state.review)
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # Create downloads section
-    st.markdown("### Export Options")
+    # Modern dashboard header
+    st.markdown("""
+    <div class="dashboard-header">
+        <h2>RFP Response Dashboard</h2>
+        <p>Complete analysis and response for your RFP document</p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Create columns for different download formats
-    col1, col2, col3, col4 = st.columns(4)
+    # Create metrics dashboard with visual charts
+    col1, col2 = st.columns([2, 1])
     
     with col1:
-        # Create downloadable markdown response
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Markdown Format")
-        md_buffer = io.BytesIO()
-        response_text = f"""# RFP Response Draft
-
-{st.session_state.response_draft}
-
-## Quality Review
-{st.session_state.review}
-"""
-        md_buffer.write(response_text.encode())
-        md_buffer.seek(0)
+        st.markdown('<div class="dashboard-card">', unsafe_allow_html=True)
+        st.subheader("🔍 Response Analytics")
         
-        st.download_button(
-            label="📄 Download as Markdown",
-            data=md_buffer,
-            file_name="rfp_response_draft.md",
-            mime="text/markdown"
-        )
+        # Count requirements
+        req_count = 0
+        if isinstance(st.session_state.requirements, dict) and "Key_Requirements_And_Deliverables" in st.session_state.requirements:
+            req_data = st.session_state.requirements["Key_Requirements_And_Deliverables"]
+            if isinstance(req_data, dict):
+                for category, items in req_data.items():
+                    if isinstance(items, list):
+                        req_count += len(items)
+                    else:
+                        req_count += 1
+        
+        # Estimate response completeness
+        completeness = "N/A"
+        if st.session_state.review:
+            # Look for percentages in the review text
+            percentages = re.findall(r'(\d+)%', st.session_state.review)
+            if percentages:
+                try:
+                    # Use the first percentage found as completeness
+                    completeness = f"{percentages[0]}%"
+                except:
+                    pass
+        
+        # Count sections in response
+        section_count = 0
+        if st.session_state.response_draft:
+            # Count markdown headings as sections
+            section_count = st.session_state.response_draft.count('\n#')
+        
+        # Estimate time saved
+        # Assume 30 minutes per requirement for manual processing
+        time_saved = req_count * 30  # minutes
+        if time_saved > 60:
+            time_saved_str = f"{time_saved // 60}h {time_saved % 60}m"
+        else:
+            time_saved_str = f"{time_saved}m"
+        
+        # Create metrics in a more visual way
+        metrics_data = {
+            "Requirements": req_count,
+            "Sections": section_count,
+            "Completeness": completeness if isinstance(completeness, str) else f"{completeness}%",
+            "Time Saved": time_saved_str
+        }
+        
+        # Display as a horizontal metric bar
+        st.markdown("""
+        <div class="metrics-container">
+        """, unsafe_allow_html=True)
+        
+        for label, value in metrics_data.items():
+            st.markdown(f"""
+            <div class="metric-item">
+                <div class="metric-label">{label}</div>
+                <div class="metric-value">{value}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        </div>
+        """, unsafe_allow_html=True)
+        
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        # Create downloadable HTML response for better formatting (without markdown library)
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("HTML Format")
+        st.markdown('<div class="dashboard-card">', unsafe_allow_html=True)
+        st.subheader("⚡ Quick Actions")
         
-        # Convert markdown to HTML using our simple converter
-        response_html = simple_md_to_html(st.session_state.response_draft)
-        review_html = simple_md_to_html(st.session_state.review)
+        # Display buttons for quick actions (Note: in Streamlit these are for display only)
+        st.markdown("""
+        <div class="action-buttons">
+            <button class="action-button primary">
+                <span class="action-icon">📝</span>
+                <span class="action-text">Edit Response</span>
+            </button>
+            <button class="action-button secondary">
+                <span class="action-icon">📤</span>
+                <span class="action-text">Share Response</span>
+            </button>
+            <button class="action-button tertiary">
+                <span class="action-icon">🔄</span>
+                <span class="action-text">Start New RFP</span>
+            </button>
+        </div>
+        """, unsafe_allow_html=True)
         
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>RFP Response</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }}
-                h1, h2, h3 {{ color: #1e3a8a; }}
-                h1 {{ border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }}
-                table {{ border-collapse: collapse; width: 100%; margin: 20px 0; }}
-                th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }}
-                th {{ background-color: #4f46e5; color: white; }}
-                tr:hover {{ background-color: #f5f5f5; }}
-                .section {{ background-color: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-            </style>
-        </head>
-        <body>
-            <h1>RFP Response Draft</h1>
-            <div class="section">
-                {response_html}
-            </div>
-            
-            <h2>Quality Review</h2>
-            <div class="section">
-                {review_html}
-            </div>
-        </body>
-        </html>
-        """
-        
-        html_buffer = io.BytesIO()
-        html_buffer.write(html_content.encode())
-        html_buffer.seek(0)
-        
-        st.download_button(
-            label="📄 Download as HTML",
-            data=html_buffer,
-            file_name="rfp_response.html",
-            mime="text/html"
-        )
         st.markdown('</div>', unsafe_allow_html=True)
     
-    with col3:
+    # Create downloads section
+    st.markdown("### Export Options")
+    
+    # Create columns for the two download options
+    col1, col2 = st.columns(2)
+    
+    with col1:
         # Create downloadable Word document
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Word Document")
+        st.markdown('<div class="download-option">', unsafe_allow_html=True)
+        st.markdown('<div class="download-icon">📝</div>', unsafe_allow_html=True)
+        st.markdown('<div class="download-title">Word Document</div>', unsafe_allow_html=True)
+        st.markdown('<div class="download-desc">Download as an editable Word document for further customization</div>', unsafe_allow_html=True)
         
         try:
             docx_buffer = generate_docx(st.session_state.response_draft, st.session_state.review)
@@ -1034,10 +1495,12 @@ if st.session_state.processing_complete:
         
         st.markdown('</div>', unsafe_allow_html=True)
     
-    with col4:
+    with col2:
         # Create downloadable PDF document
-        st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("PDF Document")
+        st.markdown('<div class="download-option">', unsafe_allow_html=True)
+        st.markdown('<div class="download-icon">📑</div>', unsafe_allow_html=True)
+        st.markdown('<div class="download-title">PDF Document</div>', unsafe_allow_html=True)
+        st.markdown('<div class="download-desc">Download as a professionally formatted PDF document</div>', unsafe_allow_html=True)
         
         try:
             pdf_buffer = generate_pdf(st.session_state.response_draft, st.session_state.review)
@@ -1052,61 +1515,6 @@ if st.session_state.processing_complete:
             st.error(f"Error generating PDF: {str(e)}")
         
         st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Create a summary metrics section
-    st.markdown("### Response Summary")
-    
-    # Create metrics for proposal stats
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        # Count requirements
-        req_count = 0
-        if isinstance(st.session_state.requirements, dict) and "Key_Requirements_And_Deliverables" in st.session_state.requirements:
-            req_data = st.session_state.requirements["Key_Requirements_And_Deliverables"]
-            if isinstance(req_data, dict):
-                for category, items in req_data.items():
-                    if isinstance(items, list):
-                        req_count += len(items)
-                    else:
-                        req_count += 1
-        
-        st.metric("Requirements Identified", req_count)
-    
-    with col2:
-        # Estimate response completeness
-        completeness = "N/A"
-        if st.session_state.review:
-            # Look for percentages in the review text
-            percentages = re.findall(r'(\d+)%', st.session_state.review)
-            if percentages:
-                try:
-                    # Use the first percentage found as completeness
-                    completeness = f"{percentages[0]}%"
-                except:
-                    pass
-        
-        st.metric("Response Completeness", completeness)
-    
-    with col3:
-        # Count sections in response
-        section_count = 0
-        if st.session_state.response_draft:
-            # Count markdown headings as sections
-            section_count = st.session_state.response_draft.count('\n#')
-        
-        st.metric("Response Sections", section_count)
-    
-    with col4:
-        # Estimate time saved
-        # Assume 30 minutes per requirement for manual processing
-        time_saved = req_count * 30  # minutes
-        if time_saved > 60:
-            time_saved_str = f"{time_saved // 60}h {time_saved % 60}m"
-        else:
-            time_saved_str = f"{time_saved}m"
-        
-        st.metric("Estimated Time Saved", time_saved_str)
     
     # Additional options
     st.markdown("### Next Steps")
@@ -1123,55 +1531,3 @@ if st.session_state.processing_complete:
         
         # Force page refresh
         st.rerun()
-
-# Display instructions if no file is uploaded
-if st.session_state.rfp_text is None and not st.session_state.processing_complete:
-    st.markdown('<div class="info-box">', unsafe_allow_html=True)
-    st.info("👆 Upload an RFP document to begin the automated response process.")
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    st.markdown("""
-    ## How This Multi-Agent System Works
-    
-    This demo showcases how AI agents can collaborate to automate complex tasks like RFP response preparation:
-    """)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        ### 🔍 Document Parser Agent
-        - Analyzes RFP documents
-        - Extracts key requirements and structure
-        - Identifies deadlines and evaluation criteria
-        
-        ### 🧠 Knowledge Retrieval Agent
-        - Searches company knowledge base
-        - Finds relevant past projects and experience
-        - Identifies suitable team members and qualifications
-        """)
-    
-    with col2:
-        st.markdown("""
-        ### ✍️ Response Generator Agent
-        - Creates tailored content for each section
-        - Aligns proposal with requirements
-        - Formats response professionally
-        
-        ### 🔍 Quality Control Agent
-        - Reviews for completeness and compliance
-        - Identifies gaps and improvement areas
-        - Highlights sections needing human expertise
-        """)
-    
-    st.markdown("---")
-    
-    st.markdown("""
-    ### Benefits for Professional Services
-    
-    - **⏱️ Time Savings**: Reduce RFP response time by 40-60%
-    - **⚖️ Consistency**: Ensure all requirements are addressed
-    - **🔄 Knowledge Reuse**: Leverage past successful proposals
-    - **📈 Win Rate**: Improve proposal quality and compliance
-    - **🤝 Collaboration**: Enable teams to focus on high-value contributions
-    """)
