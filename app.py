@@ -118,72 +118,212 @@ def call_anthropic_api(prompt, max_tokens=2000, temperature=0, system_prompt=Non
     response_json = response.json()
     return response_json["content"][0]["text"]
 
-# Custom CSS for a better looking UI
+# Replace the existing CSS section with this enhanced version:
+
 st.markdown("""
 <style>
+    /* Modern UI Theme */
     .main {
-        background-color: #f5f7f9;
+        background-color: #f8f9fa;
+        background-image: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     }
     .stApp {
         max-width: 1200px;
         margin: 0 auto;
     }
-    .css-18e3th9 {
-        padding-top: 2rem;
-    }
-    .stButton>button {
-        background-color: #4CAF50;
-        color: white;
-        padding: 10px 24px;
-        border-radius: 8px;
-        border: none;
-        font-size: 16px;
-        transition: all 0.3s;
-    }
-    .stButton>button:hover {
-        background-color: #45a049;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
+    
+    /* Header Styling */
     h1 {
-        color: #2e4057;
+        color: #1e3a8a;
+        font-weight: 700;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #4f46e5;
+        display: inline-block;
     }
     h2 {
-        color: #2e4057;
-        margin-top: 2rem;
+        color: #1e40af;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
     }
     h3 {
-        color: #2e4057;
+        color: #1e3a8a;
+        font-weight: 600;
+        margin-top: 1.25rem;
     }
+    
+    /* Button Styling */
+    .stButton>button {
+        background-color: #4f46e5;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(79, 70, 229, 0.25);
+    }
+    .stButton>button:hover {
+        background-color: #4338ca;
+        box-shadow: 0 6px 10px rgba(79, 70, 229, 0.3);
+        transform: translateY(-2px);
+    }
+    .stButton>button:active {
+        transform: translateY(0);
+    }
+    
+    /* Info Boxes */
     .info-box {
-        background-color: #e3f2fd;
-        padding: 20px;
+        background-color: #e0f2fe;
+        padding: 1.5rem;
         border-radius: 10px;
-        margin: 10px 0;
-        border-left: 5px solid #2196F3;
+        margin: 1rem 0;
+        border-left: 5px solid #0ea5e9;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
     .success-box {
-        background-color: #e8f5e9;
-        padding: 20px;
+        background-color: #dcfce7;
+        padding: 1.5rem;
         border-radius: 10px;
-        margin: 10px 0;
-        border-left: 5px solid #4CAF50;
+        margin: 1rem 0;
+        border-left: 5px solid #10b981;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
     .warning-box {
-        background-color: #fff8e1;
-        padding: 20px;
+        background-color: #fef9c3;
+        padding: 1.5rem;
         border-radius: 10px;
-        margin: 10px 0;
-        border-left: 5px solid #FFC107;
+        margin: 1rem 0;
+        border-left: 5px solid #eab308;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Agent Cards */
+    .agent-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border-top: 4px solid #4f46e5;
+        transition: all 0.3s ease;
+    }
+    .agent-card:hover {
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        transform: translateY(-5px);
     }
     .agent-header {
-        font-weight: bold;
-        color: #1976D2;
-        margin-bottom: 5px;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 0.5rem;
+        font-size: 1.25rem;
+        display: flex;
+        align-items: center;
+    }
+    .agent-header svg {
+        margin-right: 0.5rem;
     }
     .agent-status {
         font-style: italic;
-        color: #546e7a;
-        margin-bottom: 15px;
+        color: #6b7280;
+        margin-bottom: 1rem;
+    }
+    
+    /* Tables and Data Display */
+    .dataframe {
+        border-collapse: collapse;
+        width: 100%;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    .dataframe th {
+        background-color: #4f46e5;
+        color: white;
+        text-align: left;
+        padding: 12px;
+    }
+    .dataframe td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .dataframe tr:nth-child(even) {
+        background-color: #f9fafb;
+    }
+    .dataframe tr:hover {
+        background-color: #f3f4f6;
+    }
+    
+    /* Sidebar styling */
+    .css-1d391kg {
+        background-color: #f1f5f9;
+    }
+    .css-1544g2n {
+        padding: 2rem 1rem;
+    }
+    
+    /* Tabs styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background-color: #f1f5f9;
+        border-radius: 8px 8px 0 0;
+        padding: 10px 20px;
+        border: none;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #4f46e5 !important;
+        color: white !important;
+    }
+    
+    /* Progress bar */
+    .stProgress > div > div > div > div {
+        background-color: #4f46e5;
+    }
+    
+    /* File uploader */
+    .stFileUploader > div > div {
+        border: 2px dashed #4f46e5;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    
+    /* Download button */
+    .stDownloadButton > button {
+        background-color: #059669;
+    }
+    .stDownloadButton > button:hover {
+        background-color: #047857;
+    }
+    
+    /* Card-like sections */
+    .card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* JSON formatting for requirements */
+    .json-key {
+        color: #0284c7;
+        font-weight: 600;
+    }
+    .json-value {
+        color: #4b5563;
+    }
+    .json-list-item {
+        margin-left: 20px;
+        padding: 6px 0;
+        border-bottom: 1px dashed #e5e7eb;
+    }
+    .json-list-item:last-child {
+        border-bottom: none;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -269,10 +409,13 @@ if uploaded_file is not None:
         # Show confirmation
         st.success(f"Successfully extracted {len(text)} characters from {uploaded_file.name}")
 
+# Replace the agent processing display sections with this enhanced version:
+
 # Process RFP button - when clicked, start the process
 if st.session_state.rfp_text is not None and not st.session_state.processing_complete:
     if st.button("Start Multi-Agent Process", key="start_process"):
         # Display progress for Document Parser Agent
+        st.markdown('<div class="agent-card">', unsafe_allow_html=True)
         st.markdown('<div class="agent-header">🔍 Document Parser Agent</div>', unsafe_allow_html=True)
         st.markdown('<div class="agent-status">Analyzing RFP document and extracting key requirements...</div>', unsafe_allow_html=True)
         
@@ -281,7 +424,7 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
             progress_bar.progress(i + 1)
             time.sleep(0.01)
         
-        with st.spinner("Parsing document..."):
+        with st.spinner("Extracting structured requirements..."):
             # Create prompt for Document Parser Agent
             parser_prompt = f"""You are a Document Parser Agent specialized in analyzing RFP documents. 
             Extract the following information from this RFP:
@@ -318,7 +461,11 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
             except Exception as e:
                 st.session_state.requirements = {"error": f"Error parsing response: {str(e)}", "raw_response": parser_response}
         
+        st.success("✅ Requirements successfully extracted!")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
         # Display progress for Knowledge Retrieval Agent
+        st.markdown('<div class="agent-card">', unsafe_allow_html=True)
         st.markdown('<div class="agent-header">🧠 Knowledge Retrieval Agent</div>', unsafe_allow_html=True)
         st.markdown('<div class="agent-status">Searching company knowledge base for relevant information...</div>', unsafe_allow_html=True)
         
@@ -327,7 +474,7 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
             progress_bar.progress(i + 1)
             time.sleep(0.01)
         
-        with st.spinner("Retrieving relevant knowledge..."):
+        with st.spinner("Retrieving relevant knowledge and past projects..."):
             # Create prompt for Knowledge Retrieval Agent
             knowledge_prompt = f"""Given these RFP requirements, provide relevant information that should be included in our response:
             
@@ -351,7 +498,11 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
                 system_prompt=knowledge_system_prompt
             )
         
+        st.success("✅ Knowledge successfully retrieved!")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
         # Display progress for Response Generator Agent
+        st.markdown('<div class="agent-card">', unsafe_allow_html=True)
         st.markdown('<div class="agent-header">✍️ Response Generator Agent</div>', unsafe_allow_html=True)
         st.markdown('<div class="agent-status">Creating draft response sections based on requirements and knowledge...</div>', unsafe_allow_html=True)
         
@@ -360,7 +511,7 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
             progress_bar.progress(i + 1)
             time.sleep(0.01)
         
-        with st.spinner("Generating response draft..."):
+        with st.spinner("Generating comprehensive response draft..."):
             # Create prompt for Response Generator Agent
             response_prompt = f"""Create draft responses for an RFP based on these requirements and available knowledge:
             
@@ -384,7 +535,11 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
                 system_prompt=response_system_prompt
             )
         
+        st.success("✅ Response draft successfully generated!")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
         # Display progress for Quality Control Agent
+        st.markdown('<div class="agent-card">', unsafe_allow_html=True)
         st.markdown('<div class="agent-header">🔍 Quality Control Agent</div>', unsafe_allow_html=True)
         st.markdown('<div class="agent-status">Reviewing generated response for completeness and compliance...</div>', unsafe_allow_html=True)
         
@@ -393,7 +548,7 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
             progress_bar.progress(i + 1)
             time.sleep(0.01)
         
-        with st.spinner("Performing quality review..."):
+        with st.spinner("Performing comprehensive quality review..."):
             # Create prompt for Quality Control Agent
             review_prompt = f"""Review this draft RFP response against the requirements and provide feedback:
             
@@ -422,17 +577,22 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
                 system_prompt=review_system_prompt
             )
         
+        st.success("✅ Quality review successfully completed!")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
         # Mark processing as complete
         st.session_state.processing_complete = True
         
         # Force page refresh to show results
         st.rerun()
 
+# Replace the results display section of code with this enhanced version:
+
 # Display results if processing is complete
 if st.session_state.processing_complete:
     st.markdown('<div class="success-box">', unsafe_allow_html=True)
     st.subheader("✅ RFP Processing Complete!")
-    st.markdown("All agents have successfully completed their tasks.")
+    st.markdown("All agents have successfully completed their tasks. Review the outputs below and download the complete response when you're ready.")
     st.markdown("</div>", unsafe_allow_html=True)
     
     # Create tabs for different outputs
@@ -448,6 +608,7 @@ if st.session_state.processing_complete:
             else:
                 # Create a better display for each requirements section
                 if "Key_Requirements_And_Deliverables" in st.session_state.requirements:
+                    st.markdown('<div class="card">', unsafe_allow_html=True)
                     st.markdown("### 📋 Key Requirements and Deliverables")
                     st.markdown("*The core requirements that must be addressed in your response:*")
                     
@@ -458,19 +619,21 @@ if st.session_state.processing_complete:
                         for category, items in req_data.items():
                             # Format category name nicely
                             category_name = category.replace('_', ' ').title()
-                            st.markdown(f"#### {category_name}")
+                            st.markdown(f'<h4 class="json-key">{category_name}</h4>', unsafe_allow_html=True)
                             
                             # Display items as a clean list
                             if isinstance(items, list):
                                 for item in items:
-                                    st.markdown(f"- {item}")
+                                    st.markdown(f'<div class="json-list-item">{item}</div>', unsafe_allow_html=True)
                             else:
-                                st.markdown(items)
+                                st.markdown(f'<div class="json-value">{items}</div>', unsafe_allow_html=True)
                             st.markdown("---")
                     else:
                         st.markdown(req_data)
+                    st.markdown('</div>', unsafe_allow_html=True)
                 
                 if "Compliance_Needs" in st.session_state.requirements:
+                    st.markdown('<div class="card">', unsafe_allow_html=True)
                     st.markdown("### ⚖️ Compliance Requirements")
                     st.markdown("*Mandatory compliance aspects that must be addressed:*")
                     
@@ -479,19 +642,21 @@ if st.session_state.processing_complete:
                         for category, items in comp_data.items():
                             # Format category name nicely
                             category_name = category.replace('_', ' ').title()
-                            st.markdown(f"#### {category_name}")
+                            st.markdown(f'<h4 class="json-key">{category_name}</h4>', unsafe_allow_html=True)
                             
                             # Display items as a clean list
                             if isinstance(items, list):
                                 for item in items:
-                                    st.markdown(f"- {item}")
+                                    st.markdown(f'<div class="json-list-item">{item}</div>', unsafe_allow_html=True)
                             else:
-                                st.markdown(items)
+                                st.markdown(f'<div class="json-value">{items}</div>', unsafe_allow_html=True)
                             st.markdown("---")
                     else:
                         st.markdown(comp_data)
+                    st.markdown('</div>', unsafe_allow_html=True)
                 
                 if "Deadlines" in st.session_state.requirements:
+                    st.markdown('<div class="card">', unsafe_allow_html=True)
                     st.markdown("### ⏱️ Critical Deadlines")
                     st.markdown("*Important dates and timeline requirements:*")
                     
@@ -508,8 +673,10 @@ if st.session_state.processing_complete:
                         st.dataframe(deadlines_df, use_container_width=True)
                     else:
                         st.markdown(deadline_data)
+                    st.markdown('</div>', unsafe_allow_html=True)
                 
                 if "Evaluation_Criteria" in st.session_state.requirements:
+                    st.markdown('<div class="card">', unsafe_allow_html=True)
                     st.markdown("### 🔍 Evaluation Criteria")
                     st.markdown("*How your proposal will be evaluated:*")
                     
@@ -548,53 +715,274 @@ if st.session_state.processing_complete:
                                 st.markdown(f"**{criterion}**: {weight}")
                     else:
                         st.markdown(eval_data)
+                    st.markdown('</div>', unsafe_allow_html=True)
                 
                 if "Required_Sections_For_The_Response" in st.session_state.requirements:
+                    st.markdown('<div class="card">', unsafe_allow_html=True)
                     st.markdown("### 📑 Required Response Sections")
                     st.markdown("*Sections that must be included in your proposal:*")
                     
                     sections_data = st.session_state.requirements["Required_Sections_For_The_Response"]
                     if isinstance(sections_data, list):
-                        for i, section in enumerate(sections_data, 1):
-                            st.markdown(f"**{i}. {section}**")
+                        # Create a table for required sections
+                        sections_df = pd.DataFrame({
+                            "Section Number": range(1, len(sections_data) + 1),
+                            "Section Name": sections_data
+                        })
+                        st.dataframe(sections_df, use_container_width=True)
                     else:
                         st.markdown(sections_data)
+                    st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.markdown(str(st.session_state.requirements))
     
     with tab2:
         st.subheader("Relevant Knowledge")
+        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown(st.session_state.knowledge)
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with tab3:
         st.subheader("Generated Response Draft")
+        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown(st.session_state.response_draft)
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with tab4:
         st.subheader("Quality Review")
+        st.markdown('<div class="card">', unsafe_allow_html=True)
         st.markdown(st.session_state.review)
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    # Create downloadable response
-    response_text = f"""# RFP Response Draft
+    # Create downloads section
+    st.markdown("### Export Options")
+    
+    # Create columns for different download formats
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Create downloadable markdown response
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("Markdown Format")
+        md_buffer = io.BytesIO()
+        response_text = f"""# RFP Response Draft
 
 {st.session_state.response_draft}
 
 ## Quality Review
 {st.session_state.review}
 """
+        md_buffer.write(response_text.encode())
+        md_buffer.seek(0)
+        
+        st.download_button(
+            label="📥 Download as Markdown",
+            data=md_buffer,
+            file_name="rfp_response_draft.md",
+            mime="text/markdown"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    # Create a download button with better styling
-    st.markdown("### Download Complete Response")
-    buffer = io.BytesIO()
-    buffer.write(response_text.encode())
-    buffer.seek(0)
+    with col2:
+        # Create downloadable HTML response for better formatting
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("HTML Format")
+        
+        # Convert markdown to HTML
+        import markdown
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>RFP Response</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }}
+                h1, h2, h3 {{ color: #1e3a8a; }}
+                h1 {{ border-bottom: 2px solid #4f46e5; padding-bottom: 10px; }}
+                table {{ border-collapse: collapse; width: 100%; margin: 20px 0; }}
+                th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }}
+                th {{ background-color: #4f46e5; color: white; }}
+                tr:hover {{ background-color: #f5f5f5; }}
+                .section {{ background-color: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+            </style>
+        </head>
+        <body>
+            <h1>RFP Response Draft</h1>
+            <div class="section">
+                {markdown.markdown(st.session_state.response_draft)}
+            </div>
+            
+            <h2>Quality Review</h2>
+            <div class="section">
+                {markdown.markdown(st.session_state.review)}
+            </div>
+        </body>
+        </html>
+        """
+        
+        html_buffer = io.BytesIO()
+        html_buffer.write(html_content.encode())
+        html_buffer.seek(0)
+        
+        st.download_button(
+            label="📥 Download as HTML",
+            data=html_buffer,
+            file_name="rfp_response.html",
+            mime="text/html"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    st.download_button(
-        label="📥 Download Response Draft (Markdown)",
-        data=buffer,
-        file_name="rfp_response_draft.md",
-        mime="text/markdown"
-    )
+    with col3:
+        # Create downloadable CSV for structured data
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("Excel Format (Tables)")
+        
+        # Create Excel file with multiple sheets for structured data
+        if "pandas" in globals():
+            import io
+            from io import BytesIO
+            
+            # Function to extract tables from the requirements
+            def create_excel_buffer():
+                import pandas as pd
+                from io import BytesIO
+                
+                # Create a BytesIO object to hold the Excel file
+                excel_buffer = BytesIO()
+                
+                # Create Excel writer object
+                with pd.ExcelWriter(excel_buffer) as writer:
+                    # Add requirements tables
+                    if isinstance(st.session_state.requirements, dict):
+                        # Add deadlines table
+                        if "Deadlines" in st.session_state.requirements:
+                            deadline_data = st.session_state.requirements["Deadlines"]
+                            if isinstance(deadline_data, dict):
+                                deadlines_df = pd.DataFrame({
+                                    "Milestone": list(deadline_data.keys()),
+                                    "Date": list(deadline_data.values())
+                                })
+                                deadlines_df["Milestone"] = deadlines_df["Milestone"].apply(lambda x: x.replace('_', ' ').title())
+                                deadlines_df.to_excel(writer, sheet_name="Deadlines", index=False)
+                        
+                        # Add evaluation criteria table
+                        if "Evaluation_Criteria" in st.session_state.requirements:
+                            eval_data = st.session_state.requirements["Evaluation_Criteria"]
+                            if isinstance(eval_data, dict):
+                                criteria = list(eval_data.keys())
+                                weights = list(eval_data.values())
+                                criteria = [c.replace('_', ' ').replace('-', ' ').title() for c in criteria]
+                                eval_df = pd.DataFrame({
+                                    "Criterion": criteria,
+                                    "Weight": weights
+                                })
+                                eval_df.to_excel(writer, sheet_name="Evaluation Criteria", index=False)
+                        
+                        # Add sections table
+                        if "Required_Sections_For_The_Response" in st.session_state.requirements:
+                            sections_data = st.session_state.requirements["Required_Sections_For_The_Response"]
+                            if isinstance(sections_data, list):
+                                sections_df = pd.DataFrame({
+                                    "Section Number": range(1, len(sections_data) + 1),
+                                    "Section Name": sections_data
+                                })
+                                sections_df.to_excel(writer, sheet_name="Required Sections", index=False)
+                        
+                        # Add key requirements table
+                        if "Key_Requirements_And_Deliverables" in st.session_state.requirements:
+                            req_data = st.session_state.requirements["Key_Requirements_And_Deliverables"]
+                            if isinstance(req_data, dict):
+                                all_requirements = []
+                                for category, items in req_data.items():
+                                    category_name = category.replace('_', ' ').title()
+                                    if isinstance(items, list):
+                                        for item in items:
+                                            all_requirements.append({
+                                                "Category": category_name,
+                                                "Requirement": item
+                                            })
+                                    else:
+                                        all_requirements.append({
+                                            "Category": category_name,
+                                            "Requirement": items
+                                        })
+                                
+                                if all_requirements:
+                                    req_df = pd.DataFrame(all_requirements)
+                                    req_df.to_excel(writer, sheet_name="Key Requirements", index=False)
+                
+                # Get the value of the buffer
+                excel_buffer.seek(0)
+                return excel_buffer
+            
+            excel_buffer = create_excel_buffer()
+            
+            st.download_button(
+                label="📥 Download Tables (Excel)",
+                data=excel_buffer,
+                file_name="rfp_response_data.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Create a summary metrics section
+    st.markdown("### Response Summary")
+    
+    # Create metrics for proposal stats
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        # Count requirements
+        req_count = 0
+        if isinstance(st.session_state.requirements, dict) and "Key_Requirements_And_Deliverables" in st.session_state.requirements:
+            req_data = st.session_state.requirements["Key_Requirements_And_Deliverables"]
+            if isinstance(req_data, dict):
+                for category, items in req_data.items():
+                    if isinstance(items, list):
+                        req_count += len(items)
+                    else:
+                        req_count += 1
+        
+        st.metric("Requirements Identified", req_count)
+    
+    with col2:
+        # Estimate response completeness
+        completeness = "N/A"
+        if st.session_state.review:
+            # Look for percentages in the review text
+            import re
+            percentages = re.findall(r'(\d+)%', st.session_state.review)
+            if percentages:
+                try:
+                    # Use the first percentage found as completeness
+                    completeness = f"{percentages[0]}%"
+                except:
+                    pass
+        
+        st.metric("Response Completeness", completeness)
+    
+    with col3:
+        # Count sections in response
+        section_count = 0
+        if st.session_state.response_draft:
+            # Count markdown headings as sections
+            section_count = st.session_state.response_draft.count('\n#')
+        
+        st.metric("Response Sections", section_count)
+    
+    with col4:
+        # Estimate time saved
+        # Assume 30 minutes per requirement for manual processing
+        time_saved = req_count * 30  # minutes
+        if time_saved > 60:
+            time_saved_str = f"{time_saved // 60}h {time_saved % 60}m"
+        else:
+            time_saved_str = f"{time_saved}m"
+        
+        st.metric("Estimated Time Saved", time_saved_str)
     
     # Additional options
     st.markdown("### Next Steps")
