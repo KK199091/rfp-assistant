@@ -857,7 +857,10 @@ if 'review' not in st.session_state:
 if 'processing_complete' not in st.session_state:
     st.session_state.processing_complete = False
 
-# Enhanced landing page with visual elements
+# Define uploaded_file at the global level before using it
+uploaded_file = None
+
+# Landing page with uploader
 if st.session_state.rfp_text is None and not st.session_state.processing_complete:
     # Hero section with animated illustration
     st.markdown("""
@@ -948,6 +951,10 @@ if st.session_state.rfp_text is None and not st.session_state.processing_complet
             """)
     
     st.markdown('</div>', unsafe_allow_html=True)
+else:
+    # Add a new file uploader if process isn't complete yet
+    if not st.session_state.processing_complete:
+        uploaded_file = st.file_uploader("Upload an RFP document (PDF)", type=["pdf"])
 
 # Extract text from uploaded document
 if uploaded_file is not None:
