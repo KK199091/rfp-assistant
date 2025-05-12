@@ -812,36 +812,234 @@ st.markdown("""
 <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 """, unsafe_allow_html=True)
 
-# Title and introduction for sidebar
+# Title and introduction for sidebar - ENHANCED MODERN UI
 with st.sidebar:
-    st.header("Multi-Agent System")
+    # Add custom CSS for the sidebar
     st.markdown("""
-    This system uses four specialized AI agents working together to automate RFP responses:
+    <style>
+    /* Sidebar styling */
+    section[data-testid="stSidebar"] {
+        background-color: #f8fafc;
+        background-image: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+        border-right: 0;
+    }
     
-    1. **Document Parser Agent**
-       - Analyzes RFP documents
-       - Extracts key requirements and structure
+    /* Sidebar title styling */
+    .sidebar-title {
+        color: #1e3a8a;
+        font-weight: 700;
+        font-size: 1.6rem;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #4f46e5;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
     
-    2. **Knowledge Retrieval Agent**
-       - Searches company knowledge base
-       - Identifies relevant experience and capabilities
+    /* Agent cards */
+    .agent-sidebar-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
     
-    3. **Response Generator Agent**
-       - Creates tailored content for each section
-       - Aligns responses with requirements
+    .agent-sidebar-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
     
-    4. **Quality Control Agent**
-       - Reviews for completeness and compliance
-       - Identifies areas needing human expertise
-    """)
+    .agent-sidebar-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 5px;
+        height: 100%;
+        background: linear-gradient(to bottom, #4f46e5, #7c3aed);
+        border-radius: 5px 0 0 5px;
+    }
     
-    st.divider()
+    .agent-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.75rem;
+        color: white;
+        font-size: 1.25rem;
+        position: relative;
+        z-index: 1;
+    }
     
-    # Add company branding
-    st.markdown("### Powered by")
-    st.image("https://via.placeholder.com/200x60.png?text=YourCompany", width=200)
+    .agent-icon::after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        border-radius: 50%;
+        opacity: 0.2;
+        z-index: -1;
+        animation: pulse 2s infinite;
+    }
     
-    st.caption("© 2025 Your Company Name")
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 0.2;
+        }
+        50% {
+            transform: scale(1.5);
+            opacity: 0;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 0.2;
+        }
+    }
+    
+    .agent-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #1e3a8a;
+        margin-bottom: 0.25rem;
+    }
+    
+    .agent-desc {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Progress circles */
+    .progress-circles {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .progress-circle {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #e5e7eb;
+    }
+    
+    .progress-circle.active {
+        background-color: #4f46e5;
+    }
+    
+    /* Company brand card */
+    .company-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-top: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        text-align: center;
+    }
+    
+    .company-card img {
+        margin-bottom: 0.75rem;
+    }
+    
+    .copyright {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-top: 0.75rem;
+    }
+    
+    /* Animation for sidebar */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .agent-sidebar-card:nth-child(1) { animation: fadeIn 0.5s ease forwards; }
+    .agent-sidebar-card:nth-child(2) { animation: fadeIn 0.5s ease forwards 0.1s; }
+    .agent-sidebar-card:nth-child(3) { animation: fadeIn 0.5s ease forwards 0.2s; }
+    .agent-sidebar-card:nth-child(4) { animation: fadeIn 0.5s ease forwards 0.3s; }
+    
+    /* Hide default Streamlit elements and spacer */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Modern sidebar header with icon
+    st.markdown("""
+    <div class="sidebar-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+        </svg>
+        Multi-Agent System
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Agent Cards with modern UI
+    st.markdown("""
+    <div class="agent-sidebar-card">
+        <div class="agent-icon">🔍</div>
+        <div class="agent-name">Document Parser</div>
+        <div class="agent-desc">Analyzes RFP documents & extracts requirements</div>
+        <div class="progress-circles">
+            <div class="progress-circle active"></div>
+            <div class="progress-circle active"></div>
+            <div class="progress-circle active"></div>
+        </div>
+    </div>
+    
+    <div class="agent-sidebar-card">
+        <div class="agent-icon">🧠</div>
+        <div class="agent-name">Knowledge Retrieval</div>
+        <div class="agent-desc">Connects your experience to RFP requirements</div>
+        <div class="progress-circles">
+            <div class="progress-circle active"></div>
+            <div class="progress-circle active"></div>
+            <div class="progress-circle"></div>
+        </div>
+    </div>
+    
+    <div class="agent-sidebar-card">
+        <div class="agent-icon">✍️</div>
+        <div class="agent-name">Response Generator</div>
+        <div class="agent-desc">Creates tailored content for each section</div>
+        <div class="progress-circles">
+            <div class="progress-circle active"></div>
+            <div class="progress-circle"></div>
+            <div class="progress-circle"></div>
+        </div>
+    </div>
+    
+    <div class="agent-sidebar-card">
+        <div class="agent-icon">🔍</div>
+        <div class="agent-name">Quality Control</div>
+        <div class="agent-desc">Reviews for completeness and compliance</div>
+        <div class="progress-circles">
+            <div class="progress-circle"></div>
+            <div class="progress-circle"></div>
+            <div class="progress-circle"></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Updated company branding section
+    st.markdown("""
+    <div class="company-card">
+        <img src="https://via.placeholder.com/200x60.png?text=YourCompany" width="150">
+        <div class="copyright">© 2025 Your Company Name</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Initialize session state for tracking progress and results
 if 'rfp_text' not in st.session_state:
