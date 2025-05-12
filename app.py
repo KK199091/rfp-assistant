@@ -28,7 +28,12 @@ def get_api_key():
 
 # Initialize Anthropic client with secure API key retrieval
 api_key = get_api_key()
-client = anthropic.Anthropic(api_key=api_key)
+# Ensure compatibility with different Anthropic package versions
+try:
+    client = anthropic.Anthropic(api_key=api_key)
+except TypeError:
+    # Fall back to older initialization method if needed
+    client = anthropic.Client(api_key=api_key)
 
 # Password protection
 def check_password():
