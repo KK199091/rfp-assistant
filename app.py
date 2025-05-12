@@ -1,7 +1,4 @@
-# Replace the API key loading portion of your code with this:
-
 import streamlit as st
-import anthropic
 import pandas as pd
 import io
 import os
@@ -11,7 +8,7 @@ import tempfile
 from dotenv import load_dotenv
 import json
 
-# Try to load from .env file for local development
+# Load environment variables from .env file
 load_dotenv()
 
 # Get API key from environment variable or Streamlit secrets
@@ -26,12 +23,45 @@ def get_api_key():
         st.error("API key not found. Please set it in .env file or Streamlit secrets.")
         st.stop()
 
-# Initialize Anthropic client with secure API key retrieval
+# Initialize API key
 api_key = get_api_key()
 
-# Use a very simple initialization that should work with any version
-import anthropic
-client = anthropic.Client(api_key=api_key)
+# Custom Anthropic Client that doesn't use problematic HTTPX parameters
+class CustomAnthropicClient:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.base_url = "https://api.anthropic.com"
+    
+    def completion(self, prompt, model="claude-2", max_tokens_to_sample=1000, temperature=0.7):
+        """Simple implementation using requests instead of httpx"""
+        import requests
+        
+        headers = {
+            "x-api-key": self.api_key,
+            "content-type": "application/json",
+            "anthropic-version": "2023-06-01"
+        }
+        
+        data = {
+            "prompt": prompt,
+            "model": model,
+            "max_tokens_to_sample": max_tokens_to_sample,
+            "temperature": temperature
+        }
+        
+        response = requests.post(
+            f"{self.base_url}/v1/complete", 
+            headers=headers,
+            json=data
+        )
+        
+        if response.status_code != 200:
+            raise Exception(f"Error from Anthropic API: {response.text}")
+        
+        return response.json()
+
+# Create our custom client
+client = CustomAnthropicClient(api_key=api_key)
 
 # Password protection
 def check_password():
@@ -39,7 +69,7 @@ def check_password():
 
     def password_entered():
         """Checks whether a password entered by the user is correct."""
-        if st.session_state["password"] == "rfpteamDRI2025":
+        if st.session_state["password"] == "rfpdriteam2025":
             st.session_state["password_correct"] = True
             del st.session_state["password"]  # Don't store the password
         else:
@@ -81,12 +111,6 @@ def check_password():
 # Now check if the password is correct
 if not check_password():
     st.stop()  # Stop execution if password is incorrect
-
-# Initialize Anthropic client
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-
-# Initialize Anthropic client
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
 # Configure the Streamlit page
 st.set_page_config(
@@ -530,13 +554,114 @@ if st.session_state.current_step == 4:
                 if "raw_response" in st.session_state.requirements:
                     st.text(st.session_state.requirements["raw_response"])
             else:
-                for key, value in st.session_state.requirements.items():
-                    st.markdown(f"### {key.title()}")
-                    if isinstance(value, list):
-                        for item in value:
-                            st.markdown(f"- {item}")
+                # Create a better display for each requirements section
+                if "Key_Requirements_And_Deliverables" in st.session_state.requirements:
+                    st.markdown("### 📋 Key Requirements and Deliverables")
+                    st.markdown("*The core requirements that must be addressed in your response:*")
+                    
+                    # Display in a more readable format
+                    req_data = st.session_state.requirements["Key_Requirements_And_Deliverables"]
+                    
+                    if isinstance(req_data, dict):
+                        for category, items in req_data.items():
+                            # Format category name nicely
+                            category_name = category.replace('_', ' ').title()
+                            st.markdown(f"#### {category_name}")
+                            
+                            # Display items as a clean list
+                            if isinstance(items, list):
+                                for item in items:
+                                    st.markdown(f"- {item}")
+                            else:
+                                st.markdown(items)
+                            st.markdown("---")
                     else:
-                        st.markdown(value)
+                        st.markdown(req_data)
+                
+                if "Compliance_Needs" in st.session_state.requirements:
+                    st.markdown("### ⚖️ Compliance Requirements")
+                    st.markdown("*Mandatory compliance aspects that must be addressed:*")
+                    
+                    comp_data = st.session_state.requirements["Compliance_Needs"]
+                    if isinstance(comp_data, dict):
+                        for category, items in comp_data.items():
+                            # Format category name nicely
+                            category_name = category.replace('_', ' ').title()
+                            st.markdown(f"#### {category_name}")
+                            
+                            # Display items as a clean list
+                            if isinstance(items, list):
+                                for item in items:
+                                    st.markdown(f"- {item}")
+                            else:
+                                st.markdown(items)
+                            st.markdown("---")
+                    else:
+                        st.markdown(comp_data)
+                
+                if "Deadlines" in st.session_state.requirements:
+                    st.markdown("### ⏱️ Critical Deadlines")
+                    st.markdown("*Important dates and timeline requirements:*")
+                    
+                    deadline_data = st.session_state.requirements["Deadlines"]
+                    if isinstance(deadline_data, dict):
+                        # Create a clean table for deadlines
+                        deadlines_df = pd.DataFrame({
+                            "Milestone": list(deadline_data.keys()),
+                            "Date": list(deadline_data.values())
+                        })
+                        deadlines_df["Milestone"] = deadlines_df["Milestone"].apply(lambda x: x.replace('_', ' ').title())
+                        
+                        # Display as a styled table
+                        st.dataframe(deadlines_df, use_container_width=True)
+                    else:
+                        st.markdown(deadline_data)
+                
+                if "Evaluation_Criteria" in st.session_state.requirements:
+                    st.markdown("### 🔍 Evaluation Criteria")
+                    st.markdown("*How your proposal will be evaluated:*")
+                    
+                    eval_data = st.session_state.requirements["Evaluation_Criteria"]
+                    if isinstance(eval_data, dict):
+                        # Create a better visualization for evaluation criteria
+                        criteria = list(eval_data.keys())
+                        weights = list(eval_data.values())
+                        
+                        # Clean up criteria names
+                        criteria = [c.replace('_', ' ').replace('-', ' ').title() for c in criteria]
+                        
+                        # Convert percentage strings to numbers
+                        weights_numeric = [int(w.replace('%', '')) for w in weights]
+                        
+                        # Create a dataframe
+                        eval_df = pd.DataFrame({
+                            "Criterion": criteria,
+                            "Weight": weights
+                        })
+                        
+                        # Display as a styled table
+                        st.dataframe(eval_df, use_container_width=True)
+                        
+                        # Optionally add a chart
+                        st.markdown("#### Weight Distribution")
+                        chart_data = pd.DataFrame({
+                            "Criterion": criteria,
+                            "Weight": weights_numeric
+                        })
+                        st.bar_chart(chart_data.set_index("Criterion"), height=300)
+                    else:
+                        st.markdown(eval_data)
+                
+                if "Required_Sections_For_The_Response" in st.session_state.requirements:
+                    st.markdown("### 📑 Required Response Sections")
+                    st.markdown("*Sections that must be included in your proposal:*")
+                    
+                    sections_data = st.session_state.requirements["Required_Sections_For_The_Response"]
+                    if isinstance(sections_data, list):
+                        for i, section in enumerate(sections_data, 1):
+                            st.markdown(f"**{i}. {section}**")
+                    else:
+                        st.markdown(sections_data)
         else:
             st.markdown(st.session_state.requirements)
     
