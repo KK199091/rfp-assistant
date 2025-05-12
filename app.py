@@ -8,9 +8,193 @@ import tempfile
 from dotenv import load_dotenv
 import json
 import pandas as pd
+import re
 
 # Load environment variables from .env file
 load_dotenv()
+
+def generate_pdf(response_draft, review):
+    """Generate a PDF document from the RFP response and review"""
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from io import BytesIO
+    
+    # Create a BytesIO buffer to receive the PDF data
+    buffer = BytesIO()
+    
+    # Create the PDF document
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    
+    # Create custom styles
+    title_style = ParagraphStyle(
+        'Title',
+        parent=styles['Heading1'],
+        fontSize=16,
+        textColor=colors.HexColor('#1e3a8a'),
+        spaceAfter=12
+    )
+    
+    heading2_style = ParagraphStyle(
+        'Heading2',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.HexColor('#1e40af'),
+        spaceAfter=10
+    )
+    
+    normal_style = ParagraphStyle(
+        'Normal',
+        parent=styles['Normal'],
+        fontSize=11,
+        spaceAfter=8
+    )
+    
+    # Build the document content
+    content = []
+    
+    # Add title
+    content.append(Paragraph("RFP Response Draft", title_style))
+    content.append(Spacer(1, 12))
+    
+    # Basic markdown to PDF conversion (simplified)
+    lines = response_draft.split('\n')
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        if line.startswith('# '):
+            content.append(Paragraph(line[2:], title_style))
+        elif line.startswith('## '):
+            content.append(Paragraph(line[3:], heading2_style))
+        elif line.startswith('### '):
+            content.append(Paragraph(line[4:], heading2_style))
+        elif line.startswith('- ') or line.startswith('* '):
+            content.append(Paragraph(f"• {line[2:]}", normal_style))
+        else:
+            content.append(Paragraph(line, normal_style))
+    
+    # Add review section
+    content.append(Spacer(1, 20))
+    content.append(Paragraph("Quality Review", title_style))
+    content.append(Spacer(1, 12))
+    
+    # Add review content
+    lines = review.split('\n')
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        if line.startswith('# '):
+            content.append(Paragraph(line[2:], title_style))
+        elif line.startswith('## '):
+            content.append(Paragraph(line[3:], heading2_style))
+        elif line.startswith('### '):
+            content.append(Paragraph(line[4:], heading2_style))
+        elif line.startswith('- ') or line.startswith('* '):
+            content.append(Paragraph(f"• {line[2:]}", normal_style))
+        else:
+            content.append(Paragraph(line, normal_style))
+    
+    # Build the PDF
+    doc.build(content)
+    buffer.seek(0)
+    return buffer
+
+def generate_docx(response_draft, review):
+    """Generate a Word document from the RFP response and review"""
+    from docx import Document
+    from docx.shared import Pt, RGBColor
+    from io import BytesIO
+    
+    # Create a new Document
+    doc = Document()
+    
+    # Add a title
+    title = doc.add_heading("RFP Response Draft", level=1)
+    title_format = title.runs[0].font
+    title_format.size = Pt(18)
+    
+    # Process the response draft content
+    lines = response_draft.split('\n')
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        if line.startswith('# '):
+            heading = doc.add_heading(line[2:], level=1)
+        elif line.startswith('## '):
+            heading = doc.add_heading(line[3:], level=2)
+        elif line.startswith('### '):
+            heading = doc.add_heading(line[4:], level=3)
+        elif line.startswith('- ') or line.startswith('* '):
+            p = doc.add_paragraph()
+            p.add_run("• " + line[2:])
+            p.style = 'List Bullet'
+        else:
+            p = doc.add_paragraph(line)
+    
+    # Add a page break before the review section
+    doc.add_page_break()
+    
+    # Add the review section title
+    review_title = doc.add_heading("Quality Review", level=1)
+    
+    # Process the review content
+    lines = review.split('\n')
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        if line.startswith('# '):
+            heading = doc.add_heading(line[2:], level=1)
+        elif line.startswith('## '):
+            heading = doc.add_heading(line[3:], level=2)
+        elif line.startswith('### '):
+            heading = doc.add_heading(line[4:], level=3)
+        elif line.startswith('- ') or line.startswith('* '):
+            p = doc.add_paragraph()
+            p.add_run("• " + line[2:])
+            p.style = 'List Bullet'
+        else:
+            p = doc.add_paragraph(line)
+    
+    # Save the document to a BytesIO buffer
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer
+
+# Simple function to convert markdown to HTML without external dependencies
+def simple_md_to_html(md_text):
+    """Convert basic markdown to HTML without external dependencies"""
+    # Replace headers
+    html = md_text.replace("\n# ", "\n<h1>").replace("\n## ", "\n<h2>").replace("\n### ", "\n<h3>")
+    html = html.replace("\n</h1>", "</h1>\n").replace("\n</h2>", "</h2>\n").replace("\n</h3>", "</h3>\n")
+    
+    # Replace lists
+    html = html.replace("\n- ", "\n<li>").replace("\n* ", "\n<li>")
+    
+    # Replace bold and italic
+    html = html.replace("**", "<strong>").replace("__", "<strong>")
+    html = html.replace("*", "<em>").replace("_", "<em>")
+    
+    # Replace paragraphs
+    paragraphs = html.split("\n\n")
+    html = "\n".join([f"<p>{p}</p>" if not (p.startswith("<h") or p.startswith("<li>")) else p for p in paragraphs])
+    
+    # Replace list items with proper HTML
+    html = html.replace("\n<li>", "</li>\n<li>")
+    html = html.replace("<li>", "<ul><li>", 1).replace("</li>\n", "</li></ul>\n", 1)
+    
+    return html
 
 # Password protection
 def check_password():
@@ -118,8 +302,7 @@ def call_anthropic_api(prompt, max_tokens=2000, temperature=0, system_prompt=Non
     response_json = response.json()
     return response_json["content"][0]["text"]
 
-# Replace the existing CSS section with this enhanced version:
-
+# Enhanced CSS 
 st.markdown("""
 <style>
     /* Modern UI Theme */
@@ -409,8 +592,6 @@ if uploaded_file is not None:
         # Show confirmation
         st.success(f"Successfully extracted {len(text)} characters from {uploaded_file.name}")
 
-# Replace the agent processing display sections with this enhanced version:
-
 # Process RFP button - when clicked, start the process
 if st.session_state.rfp_text is not None and not st.session_state.processing_complete:
     if st.button("Start Multi-Agent Process", key="start_process"):
@@ -586,8 +767,6 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
         # Force page refresh to show results
         st.rerun()
 
-# Replace the results display section of code with this enhanced version:
-
 # Display results if processing is complete
 if st.session_state.processing_complete:
     st.markdown('<div class="success-box">', unsafe_allow_html=True)
@@ -758,7 +937,7 @@ if st.session_state.processing_complete:
     st.markdown("### Export Options")
     
     # Create columns for different download formats
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         # Create downloadable markdown response
@@ -776,7 +955,7 @@ if st.session_state.processing_complete:
         md_buffer.seek(0)
         
         st.download_button(
-            label="📥 Download as Markdown",
+            label="📄 Download as Markdown",
             data=md_buffer,
             file_name="rfp_response_draft.md",
             mime="text/markdown"
@@ -784,12 +963,14 @@ if st.session_state.processing_complete:
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        # Create downloadable HTML response for better formatting
+        # Create downloadable HTML response for better formatting (without markdown library)
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("HTML Format")
         
-        # Convert markdown to HTML
-        import markdown
+        # Convert markdown to HTML using our simple converter
+        response_html = simple_md_to_html(st.session_state.response_draft)
+        review_html = simple_md_to_html(st.session_state.review)
+        
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -811,12 +992,12 @@ if st.session_state.processing_complete:
         <body>
             <h1>RFP Response Draft</h1>
             <div class="section">
-                {markdown.markdown(st.session_state.response_draft)}
+                {response_html}
             </div>
             
             <h2>Quality Review</h2>
             <div class="section">
-                {markdown.markdown(st.session_state.review)}
+                {review_html}
             </div>
         </body>
         </html>
@@ -827,7 +1008,7 @@ if st.session_state.processing_complete:
         html_buffer.seek(0)
         
         st.download_button(
-            label="📥 Download as HTML",
+            label="📄 Download as HTML",
             data=html_buffer,
             file_name="rfp_response.html",
             mime="text/html"
@@ -835,96 +1016,40 @@ if st.session_state.processing_complete:
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
-        # Create downloadable CSV for structured data
+        # Create downloadable Word document
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.subheader("Excel Format (Tables)")
+        st.subheader("Word Document")
         
-        # Create Excel file with multiple sheets for structured data
-        if "pandas" in globals():
-            import io
-            from io import BytesIO
-            
-            # Function to extract tables from the requirements
-            def create_excel_buffer():
-                import pandas as pd
-                from io import BytesIO
-                
-                # Create a BytesIO object to hold the Excel file
-                excel_buffer = BytesIO()
-                
-                # Create Excel writer object
-                with pd.ExcelWriter(excel_buffer) as writer:
-                    # Add requirements tables
-                    if isinstance(st.session_state.requirements, dict):
-                        # Add deadlines table
-                        if "Deadlines" in st.session_state.requirements:
-                            deadline_data = st.session_state.requirements["Deadlines"]
-                            if isinstance(deadline_data, dict):
-                                deadlines_df = pd.DataFrame({
-                                    "Milestone": list(deadline_data.keys()),
-                                    "Date": list(deadline_data.values())
-                                })
-                                deadlines_df["Milestone"] = deadlines_df["Milestone"].apply(lambda x: x.replace('_', ' ').title())
-                                deadlines_df.to_excel(writer, sheet_name="Deadlines", index=False)
-                        
-                        # Add evaluation criteria table
-                        if "Evaluation_Criteria" in st.session_state.requirements:
-                            eval_data = st.session_state.requirements["Evaluation_Criteria"]
-                            if isinstance(eval_data, dict):
-                                criteria = list(eval_data.keys())
-                                weights = list(eval_data.values())
-                                criteria = [c.replace('_', ' ').replace('-', ' ').title() for c in criteria]
-                                eval_df = pd.DataFrame({
-                                    "Criterion": criteria,
-                                    "Weight": weights
-                                })
-                                eval_df.to_excel(writer, sheet_name="Evaluation Criteria", index=False)
-                        
-                        # Add sections table
-                        if "Required_Sections_For_The_Response" in st.session_state.requirements:
-                            sections_data = st.session_state.requirements["Required_Sections_For_The_Response"]
-                            if isinstance(sections_data, list):
-                                sections_df = pd.DataFrame({
-                                    "Section Number": range(1, len(sections_data) + 1),
-                                    "Section Name": sections_data
-                                })
-                                sections_df.to_excel(writer, sheet_name="Required Sections", index=False)
-                        
-                        # Add key requirements table
-                        if "Key_Requirements_And_Deliverables" in st.session_state.requirements:
-                            req_data = st.session_state.requirements["Key_Requirements_And_Deliverables"]
-                            if isinstance(req_data, dict):
-                                all_requirements = []
-                                for category, items in req_data.items():
-                                    category_name = category.replace('_', ' ').title()
-                                    if isinstance(items, list):
-                                        for item in items:
-                                            all_requirements.append({
-                                                "Category": category_name,
-                                                "Requirement": item
-                                            })
-                                    else:
-                                        all_requirements.append({
-                                            "Category": category_name,
-                                            "Requirement": items
-                                        })
-                                
-                                if all_requirements:
-                                    req_df = pd.DataFrame(all_requirements)
-                                    req_df.to_excel(writer, sheet_name="Key Requirements", index=False)
-                
-                # Get the value of the buffer
-                excel_buffer.seek(0)
-                return excel_buffer
-            
-            excel_buffer = create_excel_buffer()
+        try:
+            docx_buffer = generate_docx(st.session_state.response_draft, st.session_state.review)
             
             st.download_button(
-                label="📥 Download Tables (Excel)",
-                data=excel_buffer,
-                file_name="rfp_response_data.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                label="📝 Download as Word",
+                data=docx_buffer,
+                file_name="rfp_response.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
+        except Exception as e:
+            st.error(f"Error generating Word document: {str(e)}")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col4:
+        # Create downloadable PDF document
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("PDF Document")
+        
+        try:
+            pdf_buffer = generate_pdf(st.session_state.response_draft, st.session_state.review)
+            
+            st.download_button(
+                label="📑 Download as PDF",
+                data=pdf_buffer,
+                file_name="rfp_response.pdf",
+                mime="application/pdf"
+            )
+        except Exception as e:
+            st.error(f"Error generating PDF: {str(e)}")
         
         st.markdown('</div>', unsafe_allow_html=True)
     
@@ -953,7 +1078,6 @@ if st.session_state.processing_complete:
         completeness = "N/A"
         if st.session_state.review:
             # Look for percentages in the review text
-            import re
             percentages = re.findall(r'(\d+)%', st.session_state.review)
             if percentages:
                 try:
