@@ -29,20 +29,9 @@ def get_api_key():
 # Initialize Anthropic client with secure API key retrieval
 api_key = get_api_key()
 
-# Handle different versions of the Anthropic library
-try:
-    # Try importing specific client class based on version
-    try:
-        from anthropic import Anthropic
-        client = Anthropic(api_key=api_key)
-    except (ImportError, TypeError):
-        # Fall back to older client
-        from anthropic import Client
-        client = Client(api_key=api_key)
-except Exception as e:
-    st.error(f"Failed to initialize Anthropic client: {str(e)}")
-    st.info("This may be due to a compatibility issue with the Anthropic library.")
-    st.stop()
+# Use a very simple initialization that should work with any version
+import anthropic
+client = anthropic.Client(api_key=api_key)
 
 # Password protection
 def check_password():
@@ -260,18 +249,17 @@ def parse_rfp_document(content):
     {content[:15000]}  # Limit content to avoid token limits
     """
     
-    response = client.messages.create(
-        model="claude-3-7-sonnet-20250219",
-        max_tokens=2000,
-        temperature=0,
-        system="You are a Document Parser Agent that extracts structured information from RFP documents.",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    
     try:
+        response = client.completion(
+            prompt=f"\n\nHuman: {prompt}\n\nAssistant:",
+            model="claude-2",
+            max_tokens_to_sample=2000,
+            temperature=0
+        )
+        
+        response_text = response["completion"]
+        
         # Try to extract JSON from the response
-        response_text = response.content[0].text
-        # Look for JSON content
         start_idx = response_text.find('{')
         end_idx = response_text.rfind('}') + 1
         if start_idx >= 0 and end_idx > start_idx:
@@ -279,7 +267,7 @@ def parse_rfp_document(content):
             return json.loads(json_str)
         return {"error": "Could not extract proper JSON format from response"}
     except Exception as e:
-        return {"error": f"Error parsing response: {str(e)}", "raw_response": response.content[0].text}
+        return {"error": f"Error parsing response: {str(e)}", "raw_response": str(response) if 'response' in locals() else "No response generated"}
 
 # Function for Knowledge Retrieval Agent
 def retrieve_relevant_knowledge(requirements):
@@ -297,15 +285,14 @@ def retrieve_relevant_knowledge(requirements):
     Format as a structured list of recommendations.
     """
     
-    response = client.messages.create(
-        model="claude-3-7-sonnet-20250219",
-        max_tokens=2000,
-        temperature=0.2,
-        system="You are a Knowledge Retrieval Agent that finds relevant information from a company's knowledge base.",
-        messages=[{"role": "user", "content": prompt}]
+    response = client.completion(
+        prompt=f"\n\nHuman: {prompt}\n\nAssistant:",
+        model="claude-2",
+        max_tokens_to_sample=2000,
+        temperature=0.2
     )
     
-    return response.content[0].text
+    return response["completion"]
 
 # Function for Response Generator Agent
 def generate_response_sections(requirements, knowledge):
@@ -323,15 +310,14 @@ def generate_response_sections(requirements, knowledge):
     Use markdown formatting for better readability.
     """
     
-    response = client.messages.create(
-        model="claude-3-7-sonnet-20250219",
-        max_tokens=3500,
-        temperature=0.4,
-        system="You are a Response Generator Agent that creates professional RFP response content.",
-        messages=[{"role": "user", "content": prompt}]
+    response = client.completion(
+        prompt=f"\n\nHuman: {prompt}\n\nAssistant:",
+        model="claude-2",
+        max_tokens_to_sample=3500,
+        temperature=0.4
     )
     
-    return response.content[0].text
+    return response["completion"]
 
 # Function for Quality Control Agent
 def review_response(response_content, requirements):
@@ -354,15 +340,14 @@ def review_response(response_content, requirements):
     Format your response in markdown with clear sections.
     """
     
-    response = client.messages.create(
-        model="claude-3-7-sonnet-20250219",
-        max_tokens=2000,
-        temperature=0,
-        system="You are a Quality Control Agent that reviews RFP responses for completeness, compliance, and quality.",
-        messages=[{"role": "user", "content": prompt}]
+    response = client.completion(
+        prompt=f"\n\nHuman: {prompt}\n\nAssistant:",
+        model="claude-2",
+        max_tokens_to_sample=2000,
+        temperature=0
     )
     
-    return response.content[0].text
+    return response["completion"]
 
 # Sidebar with explanation and progress tracking
 with st.sidebar:
