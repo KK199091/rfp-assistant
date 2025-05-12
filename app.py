@@ -94,7 +94,7 @@ def call_anthropic_api(prompt, max_tokens=2000, temperature=0):
     
     data = {
         "prompt": f"\n\nHuman: {prompt}\n\nAssistant:",
-        "model": "claude-3-opus-20240229",
+        "model": "claude-2",  # Using claude-2 which is compatible with the complete API
         "max_tokens_to_sample": max_tokens,
         "temperature": temperature
     }
