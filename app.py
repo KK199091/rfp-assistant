@@ -172,6 +172,77 @@ def generate_docx(response_draft, review):
     buffer.seek(0)
     return buffer
 
+# Function to provide sample hard-coded RFP requirements
+def get_sample_rfp_requirements():
+    """Returns hard-coded sample RFP requirements for demo purposes"""
+    return {
+        "Key_Requirements_And_Deliverables": {
+            "IT_Services": [
+                "Implementation of a cloud-based Enterprise Resource Planning (ERP) system",
+                "Integration with existing legacy systems including financial management and HR platforms",
+                "Customized dashboard and reporting capabilities",
+                "Mobile application development for field staff operations",
+                "Data migration from existing systems"
+            ],
+            "Security_Requirements": [
+                "Implementation of ISO 27001 compliant security measures",
+                "Multi-factor authentication for all user access points",
+                "End-to-end encryption for all data transfers",
+                "Regular security audits and vulnerability assessments"
+            ],
+            "Training_and_Support": [
+                "Comprehensive training program for all staff levels",
+                "24/7 technical support for critical systems",
+                "Detailed system documentation and user manuals",
+                "Monthly system health checks and performance optimization"
+            ]
+        },
+        "Compliance_Needs": {
+            "Regulatory_Compliance": [
+                "Adherence to Australian Privacy Principles (APP)",
+                "Compliance with General Data Protection Regulation (GDPR) for international operations",
+                "Compliance with industry-specific regulations and standards",
+                "Regular compliance reporting"
+            ],
+            "Standards_Compliance": [
+                "ISO 9001:2015 Quality Management System",
+                "ISO/IEC 27001:2022 Information Security Management",
+                "WCAG 2.1 Level AA accessibility standards"
+            ]
+        },
+        "Deadlines": {
+            "Submission_Deadline": "June 15, 2025, 17:00 AEST",
+            "Project_Timeline": [
+                "System Design and Planning: July-August 2025",
+                "Development and Integration: September-December 2025",
+                "Testing and Quality Assurance: January-February 2026",
+                "Staff Training: March 2026",
+                "Go-Live: April 1, 2026"
+            ]
+        },
+        "Evaluation_Criteria": {
+            "Technical_Solution": "35% - Assessment of the proposed technical solution and its alignment with business needs",
+            "Experience_and_Expertise": "25% - Evaluation of vendor's previous experience and technical expertise",
+            "Implementation_Approach": "20% - Assessment of project methodology, timeline, and risk management",
+            "Cost": "15% - Overall cost effectiveness and value for money",
+            "Support_Services": "5% - Quality of proposed ongoing support and maintenance"
+        },
+        "Required_Sections_For_The_Response": [
+            "Executive Summary",
+            "Company Profile and Experience",
+            "Understanding of Requirements",
+            "Proposed Solution and Approach",
+            "Project Management Methodology",
+            "Implementation Timeline",
+            "Team Composition and Qualifications",
+            "Quality Assurance and Testing",
+            "Training and Knowledge Transfer",
+            "Ongoing Support and Maintenance",
+            "Pricing Structure",
+            "References and Case Studies"
+        ]
+    }
+
 # Password protection
 def check_password():
     """Returns `True` if the user had the correct password."""
@@ -1194,95 +1265,13 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
         # Create a placeholder for the success message
         success_placeholder1 = st.empty()
         
-        # Process document parser agent
+        # Process document parser agent - MODIFIED TO USE HARD-CODED REQUIREMENTS
         with st.spinner("Extracting structured requirements..."):
-            # Create prompt for Document Parser Agent
-            parser_prompt = f"""You are a Document Parser Agent specialized in analyzing RFP documents. 
-            Extract the following information from this RFP:
-            1. Key requirements and deliverables
-            2. Compliance needs
-            3. Deadlines
-            4. Evaluation criteria
-            5. Required sections for the response
+            # Instead of parsing the document, use our sample requirements
+            st.session_state.requirements = get_sample_rfp_requirements()
             
-            Format your response as JSON with these sections as keys.
-            
-            RFP content:
-            {st.session_state.rfp_text[:15000]}  # Limit content to avoid token limits
-            """
-            
-            # Call Anthropic API with system prompt
-            parser_system_prompt = "You are a Document Parser Agent that extracts structured information from RFP documents."
-            parser_response = call_anthropic_api(
-                parser_prompt, 
-                max_tokens=2000, 
-                temperature=0,
-                system_prompt=parser_system_prompt
-            )
-            
-            # Try to extract JSON from the response with improved error handling
-            try:
-                # First attempt to find JSON via standard method
-                start_idx = parser_response.find('{')
-                end_idx = parser_response.rfind('}') + 1
-                
-                if start_idx >= 0 and end_idx > start_idx:
-                    json_str = parser_response[start_idx:end_idx]
-                    
-                    try:
-                        # Try to parse the JSON string
-                        st.session_state.requirements = json.loads(json_str)
-                    except json.JSONDecodeError:
-                        # If standard JSON parsing fails, try a more flexible approach
-                        # This handles cases where the JSON might have formatting issues
-                        import re
-                        # Clean up the string - remove any problematic characters
-                        cleaned_json = re.sub(r'[\n\r\t]', '', json_str)
-                        # Try again with cleaned string
-                        try:
-                            st.session_state.requirements = json.loads(cleaned_json)
-                        except:
-                            # If still failing, create a structured dictionary manually
-                            # This is a fallback to ensure something is displayed
-                            requirements_text = parser_response.replace('\n', ' ').strip()
-                            st.session_state.requirements = {
-                                "Key_Requirements_And_Deliverables": {
-                                    "Extracted_Requirements": requirements_text
-                                },
-                                "Compliance_Needs": {
-                                    "Compliance_Requirements": "Extraction failed - please review document manually"
-                                },
-                                "Deadlines": {
-                                    "Submission_Deadline": "Extraction failed - please review document manually"
-                                },
-                                "Evaluation_Criteria": {
-                                    "Criteria": "Extraction failed - please review document manually"
-                                },
-                                "Required_Sections_For_The_Response": [
-                                    "Executive Summary", 
-                                    "Technical Approach", 
-                                    "Experience", 
-                                    "Team Composition", 
-                                    "Project Plan"
-                                ]
-                            }
-                else:
-                    # If no JSON-like structure is found, create a fallback structure
-                    st.session_state.requirements = {
-                        "Key_Requirements_And_Deliverables": {
-                            "Main_Requirements": parser_response[:500] + "..."
-                        },
-                        "error": "Could not extract proper JSON format - showing raw text extract"
-                    }
-            except Exception as e:
-                # Create a basic fallback structure in case of any error
-                st.session_state.requirements = {
-                    "Key_Requirements_And_Deliverables": {
-                        "Error": "An error occurred during processing"
-                    },
-                    "error": f"Error details: {str(e)}",
-                    "raw_response": parser_response[:200] + "..."  # Truncated to avoid overly large error messages
-                }
+            # Add a small delay to simulate processing time
+            time.sleep(2)
         
         # Show success indicator with SVG animation
         success_placeholder1.markdown(f'''
