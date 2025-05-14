@@ -1221,16 +1221,69 @@ if st.session_state.rfp_text is not None and not st.session_state.processing_com
             )
             
             # Try to extract JSON from the response
+# REPLACE WITH THIS IMPROVED VERSION which handles more edge cases:
+try:
+    # First attempt to find JSON via standard method
+    start_idx = parser_response.find('{')
+    end_idx = parser_response.rfind('}') + 1
+    
+    if start_idx >= 0 and end_idx > start_idx:
+        json_str = parser_response[start_idx:end_idx]
+        
+        try:
+            # Try to parse the JSON string
+            st.session_state.requirements = json.loads(json_str)
+        except json.JSONDecodeError:
+            # If standard JSON parsing fails, try a more flexible approach
+            # This handles cases where the JSON might have formatting issues
+            import re
+            # Clean up the string - remove any problematic characters
+            cleaned_json = re.sub(r'[\n\r\t]', '', json_str)
+            # Try again with cleaned string
             try:
-                start_idx = parser_response.find('{')
-                end_idx = parser_response.rfind('}') + 1
-                if start_idx >= 0 and end_idx > start_idx:
-                    json_str = parser_response[start_idx:end_idx]
-                    st.session_state.requirements = json.loads(json_str)
-                else:
-                    st.session_state.requirements = {"error": "Could not extract proper JSON format from response"}
-            except Exception as e:
-                st.session_state.requirements = {"error": f"Error parsing response: {str(e)}", "raw_response": parser_response}
+                st.session_state.requirements = json.loads(cleaned_json)
+            except:
+                # If still failing, create a structured dictionary manually
+                # This is a fallback to ensure something is displayed
+                requirements_text = parser_response.replace('\n', ' ').strip()
+                st.session_state.requirements = {
+                    "Key_Requirements_And_Deliverables": {
+                        "Extracted_Requirements": requirements_text
+                    },
+                    "Compliance_Needs": {
+                        "Compliance_Requirements": "Extraction failed - please review document manually"
+                    },
+                    "Deadlines": {
+                        "Submission_Deadline": "Extraction failed - please review document manually"
+                    },
+                    "Evaluation_Criteria": {
+                        "Criteria": "Extraction failed - please review document manually"
+                    },
+                    "Required_Sections_For_The_Response": [
+                        "Executive Summary", 
+                        "Technical Approach", 
+                        "Experience", 
+                        "Team Composition", 
+                        "Project Plan"
+                    ]
+                }
+    else:
+        # If no JSON-like structure is found, create a fallback structure
+        st.session_state.requirements = {
+            "Key_Requirements_And_Deliverables": {
+                "Main_Requirements": parser_response[:500] + "..."
+            },
+            "error": "Could not extract proper JSON format - showing raw text extract"
+        }
+except Exception as e:
+    # Create a basic fallback structure in case of any error
+    st.session_state.requirements = {
+        "Key_Requirements_And_Deliverables": {
+            "Error": "An error occurred during processing"
+        },
+        "error": f"Error details: {str(e)}",
+        "raw_response": parser_response[:200] + "..."  # Truncated to avoid overly large error messages
+    }
         
         # Show success indicator with SVG animation
         success_placeholder1.markdown(f'''
@@ -1417,140 +1470,87 @@ if st.session_state.processing_complete:
     with tab1:
         st.subheader("Extracted Requirements")
         if isinstance(st.session_state.requirements, dict):
-            if "error" in st.session_state.requirements:
-                st.error(st.session_state.requirements["error"])
-                if "raw_response" in st.session_state.requirements:
-                    st.text(st.session_state.requirements["raw_response"])
+            st.write("Requirements data structure is valid")
+        else: 
+            st.error("Requirements data is not in dictionary format")
+            st.write(f"Type: {type(st.session_state.requirements)}")
+
+    # Then make sure the display logic is robust with proper checks:
+        if isinstance(st.session_state.requirements, dict):
+    if "error" in st.session_state.requirements:
+        st.error(st.session_state.requirements["error"])
+        if "raw_response" in st.session_state.requirements:
+            st.text(st.session_state.requirements["raw_response"])
+    else:
+        # Before trying to access specific keys, check if they exist
+        req_keys = ["Key_Requirements_And_Deliverables", "Compliance_Needs", 
+                   "Deadlines", "Evaluation_Criteria", "Required_Sections_For_The_Response"]
+        
+        for key in req_keys:
+            if key in st.session_state.requirements:
+                st.markdown(f'<div class="card">', unsafe_allow_html=True)
+                
+                # Use appropriate emoji and title based on key
+                title_mapping = {
+                    "Key_Requirements_And_Deliverables": "📋 Key Requirements and Deliverables",
+                    "Compliance_Needs": "⚖️ Compliance Requirements",
+                    "Deadlines": "⏱️ Critical Deadlines",
+                    "Evaluation_Criteria": "🔍 Evaluation Criteria",
+                    "Required_Sections_For_The_Response": "📑 Required Response Sections"
+                }
+                
+                section_title = title_mapping.get(key, key.replace('_', ' ').title())
+                st.markdown(f"### {section_title}")
+                
+                # Add appropriate subtitle
+                subtitle_mapping = {
+                    "Key_Requirements_And_Deliverables": "*The core requirements that must be addressed in your response:*",
+                    "Compliance_Needs": "*Mandatory compliance aspects that must be addressed:*",
+                    "Deadlines": "*Important dates and timeline requirements:*",
+                    "Evaluation_Criteria": "*How your proposal will be evaluated:*",
+                    "Required_Sections_For_The_Response": "*Sections that must be included in your proposal:*"
+                }
+                
+                if key in subtitle_mapping:
+                    st.markdown(subtitle_mapping[key])
+                
+                # Display data based on type
+                data = st.session_state.requirements[key]
+                
+                # Handle different data structures appropriately
+                if isinstance(data, dict):
+                    for category, items in data.items():
+                        category_name = category.replace('_', ' ').title()
+                        st.markdown(f'<h4 class="json-key">{category_name}</h4>', unsafe_allow_html=True)
+                        
+                        if isinstance(items, list):
+                            for item in items:
+                                st.markdown(f'<div class="json-list-item">{item}</div>', unsafe_allow_html=True)
+                        else:
+                            st.markdown(f'<div class="json-value">{items}</div>', unsafe_allow_html=True)
+                        st.markdown("---")
+                elif isinstance(data, list):
+                    # Create a table for required sections
+                    sections_df = pd.DataFrame({
+                        "Section Number": range(1, len(data) + 1),
+                        "Section Name": data
+                    })
+                    st.dataframe(sections_df, use_container_width=True)
+                else:
+                    # If it's just a string or other type
+                    st.markdown(str(data))
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+            # If a key is missing, create a minimal placeholder
             else:
-                # Create a better display for each requirements section
-                if "Key_Requirements_And_Deliverables" in st.session_state.requirements:
-                    st.markdown('<div class="card">', unsafe_allow_html=True)
-                    st.markdown("### 📋 Key Requirements and Deliverables")
-                    st.markdown("*The core requirements that must be addressed in your response:*")
-                    
-                    # Display in a more readable format
-                    req_data = st.session_state.requirements["Key_Requirements_And_Deliverables"]
-                    
-                    if isinstance(req_data, dict):
-                        for category, items in req_data.items():
-                            # Format category name nicely
-                            category_name = category.replace('_', ' ').title()
-                            st.markdown(f'<h4 class="json-key">{category_name}</h4>', unsafe_allow_html=True)
-                            
-                            # Display items as a clean list
-                            if isinstance(items, list):
-                                for item in items:
-                                    st.markdown(f'<div class="json-list-item">{item}</div>', unsafe_allow_html=True)
-                            else:
-                                st.markdown(f'<div class="json-value">{items}</div>', unsafe_allow_html=True)
-                            st.markdown("---")
-                    else:
-                        st.markdown(req_data)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                
-                if "Compliance_Needs" in st.session_state.requirements:
-                    st.markdown('<div class="card">', unsafe_allow_html=True)
-                    st.markdown("### ⚖️ Compliance Requirements")
-                    st.markdown("*Mandatory compliance aspects that must be addressed:*")
-                    
-                    comp_data = st.session_state.requirements["Compliance_Needs"]
-                    if isinstance(comp_data, dict):
-                        for category, items in comp_data.items():
-                            # Format category name nicely
-                            category_name = category.replace('_', ' ').title()
-                            st.markdown(f'<h4 class="json-key">{category_name}</h4>', unsafe_allow_html=True)
-                            
-                            # Display items as a clean list
-                            if isinstance(items, list):
-                                for item in items:
-                                    st.markdown(f'<div class="json-list-item">{item}</div>', unsafe_allow_html=True)
-                            else:
-                                st.markdown(f'<div class="json-value">{items}</div>', unsafe_allow_html=True)
-                            st.markdown("---")
-                    else:
-                        st.markdown(comp_data)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                
-                if "Deadlines" in st.session_state.requirements:
-                    st.markdown('<div class="card">', unsafe_allow_html=True)
-                    st.markdown("### ⏱️ Critical Deadlines")
-                    st.markdown("*Important dates and timeline requirements:*")
-                    
-                    deadline_data = st.session_state.requirements["Deadlines"]
-                    if isinstance(deadline_data, dict):
-                        # Create a clean table for deadlines
-                        deadlines_df = pd.DataFrame({
-                            "Milestone": list(deadline_data.keys()),
-                            "Date": list(deadline_data.values())
-                        })
-                        deadlines_df["Milestone"] = deadlines_df["Milestone"].apply(lambda x: x.replace('_', ' ').title())
-                        
-                        # Display as a styled table
-                        st.dataframe(deadlines_df, use_container_width=True)
-                    else:
-                        st.markdown(deadline_data)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                
-                if "Evaluation_Criteria" in st.session_state.requirements:
-                    st.markdown('<div class="card">', unsafe_allow_html=True)
-                    st.markdown("### 🔍 Evaluation Criteria")
-                    st.markdown("*How your proposal will be evaluated:*")
-                    
-                    eval_data = st.session_state.requirements["Evaluation_Criteria"]
-                    if isinstance(eval_data, dict):
-                        # Create a better visualization for evaluation criteria
-                        criteria = list(eval_data.keys())
-                        weights = list(eval_data.values())
-                        
-                        # Clean up criteria names
-                        criteria = [c.replace('_', ' ').replace('-', ' ').title() for c in criteria]
-                        
-                        # Convert percentage strings to numbers if possible
-                        try:
-                            weights_numeric = [int(w.replace('%', '')) for w in weights]
-                            
-                            # Create a dataframe
-                            eval_df = pd.DataFrame({
-                                "Criterion": criteria,
-                                "Weight": weights
-                            })
-                            
-                            # Display as a styled table
-                            st.dataframe(eval_df, use_container_width=True)
-                            
-                            # Add a chart
-                            st.markdown("#### Weight Distribution")
-                            chart_data = pd.DataFrame({
-                                "Criterion": criteria,
-                                "Weight": weights_numeric
-                            })
-                            st.bar_chart(chart_data.set_index("Criterion"), height=300)
-                        except:
-                            # If conversion fails, just display as text
-                            for i, (criterion, weight) in enumerate(zip(criteria, weights)):
-                                st.markdown(f"**{criterion}**: {weight}")
-                    else:
-                        st.markdown(eval_data)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                
-                if "Required_Sections_For_The_Response" in st.session_state.requirements:
-                    st.markdown('<div class="card">', unsafe_allow_html=True)
-                    st.markdown("### 📑 Required Response Sections")
-                    st.markdown("*Sections that must be included in your proposal:*")
-                    
-                    sections_data = st.session_state.requirements["Required_Sections_For_The_Response"]
-                    if isinstance(sections_data, list):
-                        # Create a table for required sections
-                        sections_df = pd.DataFrame({
-                            "Section Number": range(1, len(sections_data) + 1),
-                            "Section Name": sections_data
-                        })
-                        st.dataframe(sections_df, use_container_width=True)
-                    else:
-                        st.markdown(sections_data)
-                    st.markdown('</div>', unsafe_allow_html=True)
-        else:
-            st.markdown(str(st.session_state.requirements))
+                st.markdown(f'<div class="card">', unsafe_allow_html=True)
+                section_title = key.replace('_', ' ').title()
+                st.markdown(f"### {section_title}")
+                st.markdown("*No data extracted for this section*")
+                st.markdown('</div>', unsafe_allow_html=True)
+else:
+    # Fallback for completely invalid requirements
+    st.markdown("No structured requirements could be extracted. Please try another document or check system configuration.")
     
     with tab2:
         st.subheader("Relevant Knowledge")
