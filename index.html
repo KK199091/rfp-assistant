@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFP Assistant - AI-Powered Proposal Automation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+
+        .presentation-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide {
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 60px;
+            display: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide.active {
+            display: block;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed, #ec4899);
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            color: #1e293b;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        h3 {
+            font-size: 1.8rem;
+            color: #4f46e5;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: #64748b;
+            margin-bottom: 3rem;
+            font-weight: 300;
+        }
+
+        .problem-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes fadeInUp {
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #dc2626;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: #7f1d1d;
+            margin-top: 0.5rem;
+        }
+
+        .solution-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            padding: 2rem;
+            border-radius: 15px;
+            border-left: 5px solid #3b82f6;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .agents-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .agent-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agent-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        }
+
+        .agent-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-color: #4f46e5;
+        }
+
+        .agent-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .agent-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .agent-desc {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .demo-placeholder {
+            background: linear-gradient(135deg, #fef3c7, #fed7aa);
+            border: 3px dashed #f59e0b;
+            border-radius: 20px;
+            padding: 4rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .demo-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .architecture-diagram {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .tech-stack {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .tech-item {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            min-width: 120px;
+        }
+
+        .tech-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .benefit-card {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            border-left: 5px solid #10b981;
+        }
+
+        .benefit-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #10b981;
+        }
+
+        .roi-container {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: white;
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .roi-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .roi-stat {
+            text-align: center;
+        }
+
+        .roi-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #06d6a0;
+            display: block;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 50px;
+            padding: 15px 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 20px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 2rem auto;
+            display: block;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
+        }
+
+        .slide-transition {
+            opacity: 0;
+            transform: translateX(50px);
+            animation: slideInRight 0.6s ease-out forwards;
+        }
+
+        @keyframes slideInRight {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .slide { padding: 30px; }
+            h1 { font-size: 2.5rem; }
+            h2 { font-size: 2rem; }
+            .problem-stats, .solution-features, .agents-container, .benefits-grid {
+                grid-template-columns: 1fr;
+            }
+            .tech-stack { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <div class="slide-number">1/12</div>
+            <h1 style="text-align: center; margin-top: 2rem;">RFP Assistant</h1>
+            <p class="subtitle" style="text-align: center;">AI-Powered Proposal Automation That Transforms Your Business</p>
+            <div style="text-align: center; margin-top: 3rem;">
+                <div style="font-size: 6rem; margin-bottom: 2rem;">🚀</div>
+                <p style="font-size: 1.3rem; color: #64748b;">From Hours to Minutes. From Manual to Magical.</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: The Problem -->
+        <div class="slide">
+            <div class="slide-number">2/12</div>
+            <h2>The RFP Challenge</h2>
+            <p class="subtitle">Every organization faces the same pain points with RFP responses</p>
+            
+            <div class="problem-stats">
+                <div class="stat-card">
+                    <span class="stat-number">40+</span>
+                    <span class="stat-label">Hours per RFP</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">78%</span>
+                    <span class="stat-label">Manual Effort</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">60%</span>
+                    <span class="stat-label">Missed Requirements</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 3rem;">
+                <h3>Common Pain Points:</h3>
+                <ul style="font-size: 1.2rem; line-height: 2; color: #475569; margin-left: 2rem;">
+                    <li>📄 Manual document analysis and requirement extraction</li>
+                    <li>🔍 Time-consuming research for relevant past projects</li>
+                    <li>✍️ Repetitive writing of similar response sections</li>
+                    <li>🔄 Multiple review cycles and quality checks</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 3: Current vs Future -->
+        <div class="slide">
+            <div class="slide-number">3/12</div>
+            <h2>Transformation Vision</h2>
+            <p class="subtitle">From traditional manual process to AI-powered automation</p>
+            
+            <div class="solution-features">
+                <div class="feature-card" style="background: linear-gradient(135deg, #fee2e2, #fecaca);">
+                    <div class="feature-icon">😰</div>
+                    <h3 style="color: #dc2626;">Current State</h3>
+                    <ul style="color: #7f1d1d; margin-top: 1rem;">
+                        <li>40+ hours per RFP</li>
+                        <li>Manual document analysis</li>
+                        <li>Inconsistent quality</li>
+                        <li>High stress levels</li>
+                        <li>Missed deadlines</li>
+                    </ul>
+                </div>
+                <div class="feature-card" style="background: linear-gradient(135deg, #ecfdf5, #d1fae5);">
+                    <div class="feature-icon">🎯</div>
+                    <h3 style="color: #059669;">Future State</h3>
+                    <ul style="color: #065f46; margin-top: 1rem;">
+                        <li>2-4 hours per RFP</li>
+                        <li>AI-powered automation</li>
+                        <li>Consistent excellence</li>
+                        <li>Confidence & clarity</li>
+                        <li>Early submissions</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 3rem;">
+                <div style="font-size: 3rem;">⚡</div>
+                <h3 style="color: #4f46e5;">90% Time Reduction + 100% Quality Improvement</h3>
+            </div>
+        </div>
+
+        <!-- Slide 4: Solution Overview -->
+        <div class="slide">
+            <div class="slide-number">4/12</div>
+            <h2>Introducing RFP Assistant</h2>
+            <p class="subtitle">Multi-Agent AI system that automates your entire RFP response process</p>
+            
+            <div class="agents-container">
+                <div class="agent-card">
+                    <div class="agent-icon">🔍</div>
+                    <div class="agent-title">Document Parser</div>
+                    <div class="agent-desc">Extracts and structures all requirements from RFP documents</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-icon">🧠</div>
+                    <div class="agent-title">Knowledge Retrieval</div>
+                    <div class="agent-desc">Finds relevant company experience and past project examples</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-icon">✍️</div>
+                    <div class="agent-title">Response Generator</div>
+                    <div class="agent-desc">Creates compelling, customized content for each section</div>
+                </div>
+                <div class="agent-card">
+                    <div class="agent-icon">🔍</div>
+                    <div class="agent-title">Quality Controller</div>
+                    <div class="agent-desc">Reviews for completeness, compliance, and excellence</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <p style="font-size: 1.3rem; color: #4f46e5; font-weight: 600;">Four specialized AI agents working in perfect harmony</p>
+            </div>
+        </div>
+
+        <!-- Slide 5: Live Demo -->
+        <div class="slide">
+            <div class="slide-number">5/12</div>
+            <h2>Live Demonstration</h2>
+            <p class="subtitle">See the magic happen in real-time</p>
+            
+            <div class="demo-placeholder">
+                <div class="demo-icon">🎬</div>
+                <h3 style="color: #f59e0b; margin-bottom: 1rem;">LIVE DEMO TIME</h3>
+                <p style="font-size: 1.3rem; color: #92400e;">
+                    Upload → Process → Generate → Download
+                </p>
+                <p style="font-size: 1rem; color: #92400e; margin-top: 1rem;">
+                    Watch as our AI agents transform an RFP into a professional response in minutes
+                </p>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+                    <div style="background: #f3f4f6; padding: 1rem; border-radius: 10px;">
+                        <strong>⏱️ Duration:</strong> 2-3 minutes
+                    </div>
+                    <div style="background: #f3f4f6; padding: 1rem; border-radius: 10px;">
+                        <strong>📄 Input:</strong> Sample RFP PDF
+                    </div>
+                    <div style="background: #f3f4f6; padding: 1rem; border-radius: 10px;">
+                        <strong>📋 Output:</strong> Complete Response
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Technology Architecture -->
+        <div class="slide">
+            <div class="slide-number">6/12</div>
+            <h2>Technology Architecture</h2>
+            <p class="subtitle">Built on enterprise-grade Microsoft technologies</p>
+            
+            <div class="tech-stack">
+                <div class="tech-item">
+                    <div class="tech-icon">🤖</div>
+                    <strong>Copilot</strong>
+                    <div style="font-size: 0.9rem; color: #64748b;">AI Processing</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">⚡</div>
+                    <strong>Power Platform</strong>
+                    <div style="font-size: 0.9rem; color: #64748b;">App & Automation</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">🧠</div>
+                    <strong>AI Builder</strong>
+                    <div style="font-size: 0.9rem; color: #64748b;">Document Processing</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">☁️</div>
+                    <strong>Microsoft 365</strong>
+                    <div style="font-size: 0.9rem; color: #64748b;">Integration</div>
+                </div>
+            </div>
+
+            <div class="architecture-diagram">
+                <h3 style="margin-bottom: 2rem;">System Flow</h3>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <div style="background: #dbeafe; padding: 1rem; border-radius: 10px;">Upload PDF</div>
+                    <div style="font-size: 1.5rem;">→</div>
+                    <div style="background: #fef3c7; padding: 1rem; border-radius: 10px;">AI Processing</div>
+                    <div style="font-size: 1.5rem;">→</div>
+                    <div style="background: #ecfdf5; padding: 1rem; border-radius: 10px;">Generate Response</div>
+                    <div style="font-size: 1.5rem;">→</div>
+                    <div style="background: #f3e8ff; padding: 1rem; border-radius: 10px;">Download Result</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <p style="color: #4f46e5; font-weight: 600;">🔒 Enterprise Security | 🌐 Cloud Scalability | 🔄 Seamless Integration</p>
+            </div>
+        </div>
+
+        <!-- Slide 7: Business Benefits -->
+        <div class="slide">
+            <div class="slide-number">7/12</div>
+            <h2>Business Impact</h2>
+            <p class="subtitle">Measurable benefits that transform your operations</p>
+            
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon">⚡</div>
+                    <h3 style="color: #059669;">Efficiency</h3>
+                    <p>90% reduction in manual effort and processing time</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">🎯</div>
+                    <h3 style="color: #059669;">Quality</h3>
+                    <p>100% requirement coverage with consistent excellence</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">💰</div>
+                    <h3 style="color: #059669;">Cost Savings</h3>
+                    <p>Significant reduction in resource allocation</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">📈</div>
+                    <h3 style="color: #059669;">Win Rate</h3>
+                    <p>Higher success rate with better responses</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">😊</div>
+                    <h3 style="color: #059669;">Team Satisfaction</h3>
+                    <p>Focus on strategic work, not repetitive tasks</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">🚀</div>
+                    <h3 style="color: #059669;">Scalability</h3>
+                    <p>Handle more RFPs without increasing headcount</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Implementation Options -->
+        <div class="slide">
+            <div class="slide-number">8/12</div>
+            <h2>Implementation Approaches</h2>
+            <p class="subtitle">Choose the path that fits your organization</p>
+            
+            <div class="solution-features">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3 style="color: #4f46e5;">Option 1: Copilot Only</h3>
+                    <ul style="margin-top: 1rem; color: #475569;">
+                        <li><strong>Setup:</strong> 1-2 days</li>
+                        <li><strong>Cost:</strong> M365 + Copilot license</li>
+                        <li><strong>Effort:</strong> Manual workflow</li>
+                        <li><strong>Best for:</strong> Quick start, minimal IT</li>
+                    </ul>
+                </div>
+                <div class="feature-card" style="border-left-color: #7c3aed;">
+                    <div class="feature-icon">🚀</div>
+                    <h3 style="color: #7c3aed;">Option 2: Full Power Platform</h3>
+                    <ul style="margin-top: 1rem; color: #475569;">
+                        <li><strong>Setup:</strong> 2-4 weeks</li>
+                        <li><strong>Cost:</strong> M365 + Power Platform</li>
+                        <li><strong>Effort:</strong> Fully automated</li>
+                        <li><strong>Best for:</strong> Maximum efficiency</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="background: #f8fafc; border-radius: 15px; padding: 2rem; margin-top: 3rem; text-align: center;">
+                <h3 style="color: #4f46e5; margin-bottom: 1rem;">Recommended Approach</h3>
+                <p style="font-size: 1.2rem; color: #475569;">
+                    Start with <strong>Option 1</strong> for immediate benefits, then evolve to <strong>Option 2</strong> for full automation
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 9: ROI & Value -->
+        <div class="slide">
+            <div class="slide-number">9/12</div>
+            <h2>Return on Investment</h2>
+            <p class="subtitle">Compelling financial case for immediate adoption</p>
+            
+            <div class="roi-container">
+                <h3 style="color: white; margin-bottom: 1rem;">Annual Savings Calculation</h3>
+                <p style="color: #cbd5e1; margin-bottom: 2rem;">Based on processing 50 RFPs per year</p>
+                
+                <div class="roi-stats">
+                    <div class="roi-stat">
+                        <span class="roi-number">2,000</span>
+                        <span style="color: #cbd5e1;">Hours Saved</span>
+                    </div>
+                    <div class="roi-stat">
+                        <span class="roi-number">$200K</span>
+                        <span style="color: #cbd5e1;">Cost Savings</span>
+                    </div>
+                    <div class="roi-stat">
+                        <span class="roi-number">300%</span>
+                        <span style="color: #cbd5e1;">ROI</span>
+                    </div>
+                    <div class="roi-stat">
+                        <span class="roi-number">3</span>
+                        <span style="color: #cbd5e1;">Month Payback</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <p style="font-size: 1.3rem; color: #4f46e5; font-weight: 600;">
+                    💡 Plus: Improved win rates, better team satisfaction, and competitive advantage
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 10: Next Steps -->
+        <div class="slide">
+            <div class="slide-number">10/12</div>
+            <h2>Your Journey Starts Here</h2>
+            <p class="subtitle">Simple steps to transform your RFP process</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin: 2rem 0;">
+                <div style="background: linear-gradient(135deg, #dbeafe, #bfdbfe); padding: 2rem; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">1️⃣</div>
+                    <h3 style="color: #1e40af;">Pilot Program</h3>
+                    <p style="color: #1e3a8a; margin-top: 1rem;">Start with 2-3 RFPs to validate benefits</p>
+                </div>
+                <div style="background: linear-gradient(135deg, #fef3c7, #fed7aa); padding: 2rem; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">2️⃣</div>
+                    <h3 style="color: #f59e0b;">Implementation</h3>
+                    <p style="color: #92400e; margin-top: 1rem;">Deploy chosen solution with full training</p>
+                </div>
+                <div style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); padding: 2rem; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">3️⃣</div>
+                    <h3 style="color: #059669;">Scale & Optimize</h3>
+                    <p style="color: #065f46; margin-top: 1rem;">Expand across organization and refine</p>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 3rem;">
+                <button class="cta-button">Let's Schedule Your Pilot Program</button>
+                <p style="color: #64748b; margin-top: 1rem;">Ready to transform your RFP process? We're here to help.</p>
+            </div>
+        </div>
+
+        <!-- Slide 11: Q&A -->
+        <div class="slide">
+            <div class="slide-number">11/12</div>
+            <div style="text-align: center;">
+                <h1 style="margin-top: 4rem;">Questions & Discussion</h1>
+                <div style="font-size: 6rem; margin: 2rem 0;">❓</div>
+                <p class="subtitle">Let's explore how RFP Assistant can transform your business</p>
+                
+                <div style="margin-top: 3rem; background: #f8fafc; border-radius: 15px; padding: 2rem;">
+                    <h3 style="color: #4f46e5; margin-bottom: 1rem;">Common Questions We Address:</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; text-align: left;">
+                        <div>• Integration with existing systems</div>
+                        <div>• Security and compliance</div>
+                        <div>• Training and adoption</div>
+                        <div>• Customization options</div>
+                        <div>• Implementation timeline</div>
+                        <div>• Ongoing support</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Thank You -->
+        <div class="slide">
+            <div class="slide-number">12/12</div>
+            <div style="text-align: center;">
+                <h1 style="margin-top: 3rem;">Thank You</h1>
+                <div style="font-size: 4rem; margin: 2rem 0;">🙏</div>
+                <p class="subtitle">Ready to revolutionize your RFP process?</p>
+                
+                <div style="background: linear-gradient(135deg, #1e293b, #334155); color: white; border-radius: 20px; padding: 3rem; margin: 2rem 0;">
+                    <h3 style="color: white; margin-bottom: 2rem;">Contact Information</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
+                        <div>
+                            <p>📧 <strong>Email:</strong> your.email@company.com</p>
+                            <p>📱 <strong>Phone:</strong> +1 (555) 123-4567</p>
+                        </div>
+                        <div>
+                            <p>🌐 <strong>Website:</strong> www.yourcompany.com</p>
+                            <p>💼 <strong>LinkedIn:</strong> /in/yourprofile</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="cta-button">Schedule a Follow-up Meeting</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="navigation">
+        <button class="nav-btn" onclick="previousSlide()">← Previous</button>
+        <button class="nav-btn" onclick="nextSlide()">Next →</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function previousSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') previousSlide();
+        });
+
+        // Auto-advance for demo (optional)
+        // setInterval(nextSlide, 30000); // Advance every 30 seconds
+    </script>
+</body>
+</html>
